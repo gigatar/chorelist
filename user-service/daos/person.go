@@ -174,3 +174,22 @@ func (p *PersonDAO) GetPersonType(userID string) (string, error) {
 
 	return person.Type, nil
 }
+
+// EmailExists checks if an email address exists in the system.
+func (p *PersonDAO) EmailExists(email string) (bool, error) {
+	collection := database.DB.GetPersonCollection()
+
+	ctx, cancel := context.WithTimeout(context.Background(), database.DB.Timeout)
+	defer cancel()
+
+	count, err := collection.CountDocuments(ctx, bson.M{"email": email})
+	if err != nil {
+		return true, err
+	}
+
+	if count == 0 {
+		return false, nil
+	}
+
+	return true, nil
+}
