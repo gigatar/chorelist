@@ -146,7 +146,7 @@ func (p *PersonController) ChangeName(w http.ResponseWriter, r *http.Request) {
 
 	// Get userID to ensure we can only modify ourselves
 	var jwt token.JWTToken
-	userID, err := jwt.GetUser(r.Header.Get("Authorization"))
+	userID, err := jwt.GetUser(r.Header.Get("authorization"))
 	if err != nil {
 		if strings.Contains(err.Error(), "Invalid token") {
 			w.WriteHeader(http.StatusUnauthorized)
@@ -154,6 +154,11 @@ func (p *PersonController) ChangeName(w http.ResponseWriter, r *http.Request) {
 			log.Println(err)
 			w.WriteHeader(http.StatusInternalServerError)
 		}
+		return
+	}
+
+	if userID == "" {
+		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 

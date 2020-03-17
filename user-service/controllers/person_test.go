@@ -204,7 +204,7 @@ func TestChangeName(t *testing.T) {
 			} else if strings.Compare(test.name, "Login User (Setup)") == 0 {
 				p.Login(test.out, test.in)
 			} else {
-				test.in.Header.Add("Authorization", auth)
+				test.in.Header.Add("authorization", string("Bearer "+auth))
 				p.ChangeName(test.out, test.in)
 			}
 			if test.out.Code != test.expectedStatus {
