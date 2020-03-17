@@ -1,6 +1,8 @@
 package main
 
 import (
+	"chorelist/user-service/controllers"
+	"chorelist/user-service/database"
 	"crypto/tls"
 	"log"
 	"net/http"
@@ -11,10 +13,20 @@ import (
 )
 
 func main() {
+
+	// Initialize Database
+	if err := database.DB.Init(); err != nil {
+		log.Fatal(err)
+	}
+
+	var person controllers.PersonController
+
 	router := mux.NewRouter()
-	// rest := router.PathPrefix("/rest/v1").Subrouter()
+	rest := router.PathPrefix("/rest/v1").Subrouter()
+	personEndpoint := rest.PathPrefix("/users").Subrouter()
 
 	// Unauthenticated endpoints
+	personEndpoint.HandleFunc("", person.CreatePerson).Methods("POST")
 
 	// Authenticated endpoints
 

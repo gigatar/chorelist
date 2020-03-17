@@ -8,7 +8,7 @@ import (
 // Person data structure.
 // Note: Type is essentially a string enum
 type Person struct {
-	ID       string `json:"id" bson:"_id" example:""`
+	ID       string `json:"id,omitempty" bson:"_id,omitempty" example:""`
 	Name     string `json:"name" bson:"name" example:"John Doe"`
 	Email    string `json:"email,omitempty" bson:"email,omitempty" example:"johndoe@gmail.com"`
 	Type     string `json:"type" bson:"type" example:"Parent"`
