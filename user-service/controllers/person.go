@@ -4,6 +4,7 @@ import (
 	"chorelist/user-service/daos"
 	"chorelist/user-service/models"
 	"encoding/json"
+	"errors"
 	"log"
 	"net/http"
 	"strings"
@@ -235,4 +236,24 @@ func (p *PersonController) getPersonType(personID string) (string, error) {
 	}
 
 	return personType, nil
+}
+
+// createPerson based on input.
+func (p *PersonController) createPerson(person models.Person) error {
+	if !person.Validate() {
+		return errors.New("Invalid input")
+	}
+
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(person.Password), bcryptPasswordCost)
+	if err != nil {
+		return err
+	}
+
+	person.Password = string(hashedPassword)
+	_, err = p.dao.CreatePerson(person)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

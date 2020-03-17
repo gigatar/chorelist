@@ -90,14 +90,22 @@ func TestLogin(t *testing.T) {
 		p := PersonController{}
 		t.Run(test.name, func(t *testing.T) {
 			if strings.Compare(test.name, "Create User (Setup)") == 0 {
-				p.CreatePerson(test.out, test.in)
+				var person models.Person
+				if err := json.NewDecoder(test.in.Body).Decode(&person); err != nil {
+					t.Error(err)
+					t.Fail()
+				}
+				if err := p.createPerson(person); err != nil {
+					t.Error(err)
+					t.Fail()
+				}
 			} else {
 				p.Login(test.out, test.in)
-			}
-			if test.out.Code != test.expectedStatus {
-				t.Error("Invalid response code:", test.out.Code)
-			}
 
+				if test.out.Code != test.expectedStatus {
+					t.Error("Invalid response code:", test.out.Code)
+				}
+			}
 		})
 	}
 }
@@ -162,25 +170,34 @@ func TestChangeName(t *testing.T) {
 		p := PersonController{}
 		t.Run(test.name, func(t *testing.T) {
 			if strings.Compare(test.name, "Create User (Setup)") == 0 {
-				p.CreatePerson(test.out, test.in)
-			} else if strings.Compare(test.name, "Login User (Setup)") == 0 {
-				p.Login(test.out, test.in)
-			} else {
-				if strings.Compare(test.name, "ChangeName bad token") == 0 {
-					test.in.Header.Add("authorization", string("Bearer bad"))
-				} else {
-					test.in.Header.Add("authorization", string("Bearer "+auth))
+				var person models.Person
+				if err := json.NewDecoder(test.in.Body).Decode(&person); err != nil {
+					t.Error(err)
+					t.Fail()
 				}
-				p.ChangeName(test.out, test.in)
-			}
-			if test.out.Code != test.expectedStatus {
-				t.Error("Invalid response code:", test.out.Code)
-			}
+				if err := p.createPerson(person); err != nil {
+					t.Error(err)
+					t.Fail()
+				}
+			} else {
+				if strings.Compare(test.name, "Login User (Setup)") == 0 {
+					p.Login(test.out, test.in)
+				} else {
+					if strings.Compare(test.name, "ChangeName bad token") == 0 {
+						test.in.Header.Add("authorization", string("Bearer bad"))
+					} else {
+						test.in.Header.Add("authorization", string("Bearer "+auth))
+					}
+					p.ChangeName(test.out, test.in)
+				}
+				if test.out.Code != test.expectedStatus {
+					t.Error("Invalid response code:", test.out.Code)
+				}
 
-			if strings.Compare(test.name, "Login User (Setup)") == 0 {
-				auth = test.out.Header().Get("Authorization")
+				if strings.Compare(test.name, "Login User (Setup)") == 0 {
+					auth = test.out.Header().Get("Authorization")
+				}
 			}
-
 		})
 	}
 }
@@ -259,25 +276,34 @@ func TestPasswordChange(t *testing.T) {
 		p := PersonController{}
 		t.Run(test.name, func(t *testing.T) {
 			if strings.Compare(test.name, "Create User (Setup)") == 0 {
-				p.CreatePerson(test.out, test.in)
-			} else if strings.Compare(test.name, "Login User (Setup)") == 0 {
-				p.Login(test.out, test.in)
-			} else {
-				if strings.Compare(test.name, "ChangePassword bad token") == 0 {
-					test.in.Header.Add("authorization", string("Bearer bad"))
-				} else {
-					test.in.Header.Add("authorization", string("Bearer "+auth))
+				var person models.Person
+				if err := json.NewDecoder(test.in.Body).Decode(&person); err != nil {
+					t.Error(err)
+					t.Fail()
 				}
-				p.ChangePassword(test.out, test.in)
-			}
-			if test.out.Code != test.expectedStatus {
-				t.Error("Invalid response code:", test.out.Code)
-			}
+				if err := p.createPerson(person); err != nil {
+					t.Error(err)
+					t.Fail()
+				}
+			} else {
+				if strings.Compare(test.name, "Login User (Setup)") == 0 {
+					p.Login(test.out, test.in)
+				} else {
+					if strings.Compare(test.name, "ChangePassword bad token") == 0 {
+						test.in.Header.Add("authorization", string("Bearer bad"))
+					} else {
+						test.in.Header.Add("authorization", string("Bearer "+auth))
+					}
+					p.ChangePassword(test.out, test.in)
+				}
+				if test.out.Code != test.expectedStatus {
+					t.Error("Invalid response code:", test.out.Code)
+				}
 
-			if strings.Compare(test.name, "Login User (Setup)") == 0 {
-				auth = test.out.Header().Get("Authorization")
+				if strings.Compare(test.name, "Login User (Setup)") == 0 {
+					auth = test.out.Header().Get("Authorization")
+				}
 			}
-
 		})
 	}
 }
@@ -336,25 +362,34 @@ func TestPersonDelete(t *testing.T) {
 		p := PersonController{}
 		t.Run(test.name, func(t *testing.T) {
 			if strings.Compare(test.name, "Create User (Setup)") == 0 {
-				p.CreatePerson(test.out, test.in)
-			} else if strings.Compare(test.name, "Login User (Setup)") == 0 {
-				p.Login(test.out, test.in)
-			} else {
-				if strings.Compare(test.name, "Delete User bad token") == 0 {
-					test.in.Header.Add("authorization", string("Bearer bad"))
-				} else {
-					test.in.Header.Add("authorization", string("Bearer "+auth))
+				var person models.Person
+				if err := json.NewDecoder(test.in.Body).Decode(&person); err != nil {
+					t.Error(err)
+					t.Fail()
 				}
-				p.DeletePerson(test.out, test.in)
-			}
-			if test.out.Code != test.expectedStatus {
-				t.Error("Invalid response code:", test.out.Code)
-			}
+				if err := p.createPerson(person); err != nil {
+					t.Error(err)
+					t.Fail()
+				}
+			} else {
+				if strings.Compare(test.name, "Login User (Setup)") == 0 {
+					p.Login(test.out, test.in)
+				} else {
+					if strings.Compare(test.name, "Delete User bad token") == 0 {
+						test.in.Header.Add("authorization", string("Bearer bad"))
+					} else {
+						test.in.Header.Add("authorization", string("Bearer "+auth))
+					}
+					p.DeletePerson(test.out, test.in)
+				}
+				if test.out.Code != test.expectedStatus {
+					t.Error("Invalid response code:", test.out.Code)
+				}
 
-			if strings.Compare(test.name, "Login User (Setup)") == 0 {
-				auth = test.out.Header().Get("Authorization")
+				if strings.Compare(test.name, "Login User (Setup)") == 0 {
+					auth = test.out.Header().Get("Authorization")
+				}
 			}
-
 		})
 	}
 }

@@ -2,6 +2,8 @@ package controllers
 
 import (
 	"chorelist/user-service/daos"
+	"chorelist/user-service/models"
+	"errors"
 	"log"
 	"net/http"
 	"strings"
@@ -95,4 +97,16 @@ func (f *FamilyController) DeleteFamily(w http.ResponseWriter, r *http.Request) 
 	}
 
 	w.WriteHeader(http.StatusNoContent)
+}
+
+func (f *FamilyController) createFamily(family models.Family) error {
+
+	if !family.Validate() {
+		return errors.New("Invalid input")
+	}
+
+	if err := f.dao.CreateFamily(family); err != nil {
+		return err
+	}
+	return nil
 }
