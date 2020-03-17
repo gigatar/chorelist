@@ -125,3 +125,45 @@ func (p *PersonController) Login(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Authorization", tokenString)
 }
+
+// ChangeName allows a person to change their name.
+func (p *PersonController) ChangeName(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	// Deserialize request
+	var inputPerson models.Person
+	err := json.NewDecoder(r.Body).Decode(&inputPerson)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	// Validate input
+	if !inputPerson.ValidateName() {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	// Get userID to ensure we can only modify ourselves
+	var jwt token.JWTToken
+	userID, err := jwt.GetUser(r.Header.Get("Authorization"))
+	if err != nil {
+		if strings.Contains(err.Error(), "Invalid token") {
+			w.WriteHeader(http.StatusUnauthorized)
+		} else {
+			log.Println(err)
+			w.WriteHeader(http.StatusInternalServerError)
+		}
+		return
+	}
+
+	err = p.dao.ChangeName(userID, inputPerson.Name)
+	if err != nil {
+		log.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	// success but no body
+	w.WriteHeader(http.StatusNoContent)
+}

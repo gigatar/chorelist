@@ -11,6 +11,7 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 )
 
 func init() {
@@ -29,6 +30,8 @@ func createReader(input interface{}) io.Reader {
 
 func randSeq(n int) string {
 	letters := []rune("abcdefghijklmnopqrstuvwxyz")
+	rand.Seed(time.Now().UnixNano())
+
 	b := make([]rune, n)
 	for i := range b {
 		b[i] = letters[rand.Intn(len(letters))]
@@ -99,8 +102,6 @@ func TestLogin(t *testing.T) {
 		Type:     "Parent",
 	}
 
-	t.Logf("\n%v\n", person)
-
 	testCases := []struct {
 		name           string
 		in             *http.Request
@@ -149,6 +150,69 @@ func TestLogin(t *testing.T) {
 			}
 			if test.out.Code != test.expectedStatus {
 				t.Error("Invalid response code:", test.out.Code)
+			}
+
+		})
+	}
+}
+
+func TestChangeName(t *testing.T) {
+	// Create user for setup purposes
+	person := models.Person{
+		Email:    string(randSeq(5) + "@test.com"),
+		Password: string(randSeq(15)),
+		Name:     string(randSeq(10)),
+		Type:     "Parent",
+	}
+
+	// Authorization header
+	var auth string
+
+	testCases := []struct {
+		name           string
+		in             *http.Request
+		out            *httptest.ResponseRecorder
+		expectedStatus int
+	}{
+		{
+			name:           "Create User (Setup)",
+			in:             httptest.NewRequest("GET", "/rest/v1/users", createReader(person)),
+			out:            httptest.NewRecorder(),
+			expectedStatus: http.StatusCreated,
+		},
+		{
+			name:           "Login User (Setup)",
+			in:             httptest.NewRequest("GET", "/rest/v1/users/login", createReader(person)),
+			out:            httptest.NewRecorder(),
+			expectedStatus: http.StatusOK,
+		},
+		{
+			name: "ChangeName success",
+			in: httptest.NewRequest("PATCH", "/rest/v1/users/", createReader(models.Person{
+				Name: "Updated",
+			})),
+			out:            httptest.NewRecorder(),
+			expectedStatus: http.StatusNoContent,
+		},
+	}
+
+	for _, test := range testCases {
+		p := PersonController{}
+		t.Run(test.name, func(t *testing.T) {
+			if strings.Compare(test.name, "Create User (Setup)") == 0 {
+				p.CreatePerson(test.out, test.in)
+			} else if strings.Compare(test.name, "Login User (Setup)") == 0 {
+				p.Login(test.out, test.in)
+			} else {
+				test.in.Header.Add("Authorization", auth)
+				p.ChangeName(test.out, test.in)
+			}
+			if test.out.Code != test.expectedStatus {
+				t.Error("Invalid response code:", test.out.Code)
+			}
+
+			if strings.Compare(test.name, "Login User (Setup)") == 0 {
+				auth = test.out.Header().Get("Authorization")
 			}
 
 		})

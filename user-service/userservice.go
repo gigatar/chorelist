@@ -32,6 +32,7 @@ func main() {
 
 	// Authenticated endpoints
 	personEndpoint.HandleFunc("", jwt.ValidateMiddleware(person.CreatePerson)).Methods("POST")
+	personEndpoint.HandleFunc("/changename", jwt.ValidateMiddleware(person.ChangeName)).Methods("PATCH")
 
 	// Configure CORS
 	allowedMethods := handlers.AllowedMethods([]string{

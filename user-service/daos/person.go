@@ -7,6 +7,8 @@ import (
 	"encoding/json"
 	"strings"
 
+	"go.mongodb.org/mongo-driver/bson/primitive"
+
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -55,4 +57,25 @@ func (p *PersonDAO) Login(email string) (models.Person, error) {
 	}
 
 	return person, nil
+}
+
+// ChangeName updates a person's name in the database.
+func (p *PersonDAO) ChangeName(userID, newName string) error {
+
+	id, err := primitive.ObjectIDFromHex(userID)
+	if err != nil {
+		return err
+	}
+	collection := database.DB.GetPersonCollection()
+
+	ctx, cancel := context.WithTimeout(context.Background(), database.DB.Timeout)
+	defer cancel()
+
+	// We don't need to do anything with the result.
+	_, err = collection.UpdateOne(ctx, bson.M{"_id": id}, bson.M{"$set": bson.M{"name": newName}})
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

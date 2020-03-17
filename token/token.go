@@ -22,15 +22,10 @@ type JWTToken struct {
 
 // CustomClaims data type.
 type CustomClaims struct {
-	UserID   string             `json:"UserID"`
-	FamilyID string             `json:"FamilyID"`
-	TTL      int                `json:"TTL"`
-	Standard jwt.StandardClaims `json:"Claims"`
-}
-
-// Valid is implementing the Valid interface from JWT to prevent an error
-func (c CustomClaims) Valid() error {
-	return nil
+	UserID             string `json:"UserID"`
+	FamilyID           string `json:"FamilyID"`
+	TTL                int    `json:"TTL"`
+	jwt.StandardClaims `json:"Claims"`
 }
 
 // CreateJWT Creates and returns a new JWT.
@@ -157,7 +152,7 @@ func (v *JWTToken) ValidateMiddleware(next http.HandlerFunc) http.HandlerFunc {
 		}
 
 		if claims, ok := token.Claims.(*CustomClaims); ok && token.Valid {
-			if serverIP != claims.Standard.Audience {
+			if serverIP != claims.Audience {
 				w.WriteHeader(http.StatusUnauthorized)
 				return
 			}
