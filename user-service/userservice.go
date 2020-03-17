@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/gigatar/chorelist/token"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 )
@@ -20,15 +21,17 @@ func main() {
 	}
 
 	var person controllers.PersonController
+	var jwt token.JWTToken
 
 	router := mux.NewRouter()
 	rest := router.PathPrefix("/rest/v1").Subrouter()
 	personEndpoint := rest.PathPrefix("/users").Subrouter()
 
 	// Unauthenticated endpoints
-	personEndpoint.HandleFunc("", person.CreatePerson).Methods("POST")
+	personEndpoint.HandleFunc("/login", person.Login).Methods("POST")
 
 	// Authenticated endpoints
+	personEndpoint.HandleFunc("", jwt.ValidateMiddleware(person.CreatePerson)).Methods("POST")
 
 	// Configure CORS
 	allowedMethods := handlers.AllowedMethods([]string{

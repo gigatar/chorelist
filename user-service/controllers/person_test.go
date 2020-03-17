@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"io"
 	"log"
+	"math/rand"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -25,6 +26,16 @@ func createReader(input interface{}) io.Reader {
 	return strings.NewReader(string(json))
 
 }
+
+func randSeq(n int) string {
+	letters := []rune("abcdefghijklmnopqrstuvwxyz")
+	b := make([]rune, n)
+	for i := range b {
+		b[i] = letters[rand.Intn(len(letters))]
+	}
+	return string(b)
+}
+
 func TestCreatePerson(t *testing.T) {
 	testCases := []struct {
 		name           string
@@ -77,4 +88,69 @@ func TestCreatePerson(t *testing.T) {
 		})
 	}
 
+}
+
+func TestLogin(t *testing.T) {
+	// Create user for setup purposes
+	person := models.Person{
+		Email:    string(randSeq(5) + "@test.com"),
+		Password: string(randSeq(15)),
+		Name:     string(randSeq(10)),
+		Type:     "Parent",
+	}
+
+	t.Logf("\n%v\n", person)
+
+	testCases := []struct {
+		name           string
+		in             *http.Request
+		out            *httptest.ResponseRecorder
+		expectedStatus int
+	}{
+		{
+			name:           "Create User (Setup)",
+			in:             httptest.NewRequest("GET", "/rest/v1/users", createReader(person)),
+			out:            httptest.NewRecorder(),
+			expectedStatus: http.StatusCreated,
+		},
+		{
+			name:           "Login Success",
+			in:             httptest.NewRequest("GET", "/rest/v1/users/login", createReader(person)),
+			out:            httptest.NewRecorder(),
+			expectedStatus: http.StatusOK,
+		},
+		{
+			name: "Login BadPassword",
+			in: httptest.NewRequest("GET", "/rest/v1/users/login", createReader(models.Person{
+				Email:    "user@test.com",
+				Password: "bad",
+			})),
+			out:            httptest.NewRecorder(),
+			expectedStatus: http.StatusBadRequest,
+		},
+		{
+			name: "Login Bad User",
+			in: httptest.NewRequest("GET", "/rest/v1/users/login", createReader(models.Person{
+				Email:    "bad",
+				Password: "TestP@ssw0rd123",
+			})),
+			out:            httptest.NewRecorder(),
+			expectedStatus: http.StatusBadRequest,
+		},
+	}
+
+	for _, test := range testCases {
+		p := PersonController{}
+		t.Run(test.name, func(t *testing.T) {
+			if strings.Compare(test.name, "Create User (Setup)") == 0 {
+				p.CreatePerson(test.out, test.in)
+			} else {
+				p.Login(test.out, test.in)
+			}
+			if test.out.Code != test.expectedStatus {
+				t.Error("Invalid response code:", test.out.Code)
+			}
+
+		})
+	}
 }

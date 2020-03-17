@@ -8,6 +8,8 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/gigatar/chorelist/token"
+
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -72,4 +74,54 @@ func (p *PersonController) CreatePerson(w http.ResponseWriter, r *http.Request) 
 	w.Header().Set("Location", location)
 
 	w.WriteHeader(http.StatusCreated)
+}
+
+// Login to the service.
+func (p *PersonController) Login(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	// Decode user
+	var inputPerson models.Person
+	err := json.NewDecoder(r.Body).Decode(&inputPerson)
+	if err != nil {
+		log.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	// Pull user from database.
+	person, err := p.dao.Login(inputPerson.Email)
+	if err != nil {
+		if strings.Contains(err.Error(), "no documents") {
+			w.WriteHeader(http.StatusBadRequest)
+		} else {
+			log.Println(err)
+			w.WriteHeader(http.StatusInternalServerError)
+		}
+
+		return
+	}
+
+	// Validate password
+	if err := bcrypt.CompareHashAndPassword([]byte(person.Password), []byte(inputPerson.Password)); err != nil {
+		if strings.Contains(err.Error(), "hashedPassword is not the hash of the given password") {
+			w.WriteHeader(http.StatusBadRequest)
+		} else {
+			log.Println(err)
+			w.WriteHeader(http.StatusInternalServerError)
+		}
+
+		return
+	}
+
+	// create jwt
+	var token token.JWTToken
+	tokenString, err := token.CreateJWT(r.RemoteAddr, person.ID, person.FamilyID)
+	if err != nil {
+		log.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Authorization", tokenString)
 }
