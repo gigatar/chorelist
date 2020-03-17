@@ -18,20 +18,21 @@ type Person struct {
 
 // Validate input data for Person
 func (p Person) Validate() bool {
-	if len(p.Name) < 1 || len(p.Name) > 128 {
+	if !p.ValidateName() {
 		return false
-	} else if !p.validateEmail() {
+	} else if !p.ValidateEmail() {
 		return false
-	} else if !p.validatePassword() {
+	} else if !p.ValidatePassword() {
 		return false
-	} else if !p.validateType() {
+	} else if !p.ValidateType() {
 		return false
 	}
 
 	return true
 }
 
-func (p Person) validateEmail() bool {
+// ValidateEmail validates the Person.Email field.
+func (p Person) ValidateEmail() bool {
 	emailRegex := regexp.MustCompile("^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$")
 	if !emailRegex.MatchString(p.Email) {
 		return false
@@ -39,7 +40,8 @@ func (p Person) validateEmail() bool {
 	return true
 }
 
-func (p Person) validatePassword() bool {
+// ValidatePassword validates the Person.Password field.
+func (p Person) ValidatePassword() bool {
 	if len(p.Password) < 8 || len(p.Password) > 128 {
 		return false
 	}
@@ -47,10 +49,19 @@ func (p Person) validatePassword() bool {
 	return true
 }
 
-func (p Person) validateType() bool {
+// ValidateType validates the Person.Type field.
+func (p Person) ValidateType() bool {
 	if strings.Compare(strings.ToLower(p.Type), "parent") != 0 && strings.Compare(strings.ToLower(p.Type), "child") != 0 {
 		return false
 	}
 
+	return true
+}
+
+// ValidateName validates the Person.Name field.
+func (p Person) ValidateName() bool {
+	if len(p.Name) < 1 || len(p.Name) > 128 {
+		return false
+	}
 	return true
 }
