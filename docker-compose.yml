@@ -33,5 +33,5 @@ services:
         labels:
             - traefik.enable=true
             - traefik.http.routers.users.rule=Host("localhost")
-            - traefik.http.routers.users.rule=PathPrefix("/rest/users") || PathPrefix("/rest/signup") || PathPrefix("/rest/family")
+            - traefik.http.routers.users.rule=PathPrefix("/rest/v1/users") || PathPrefix("/rest/v1/signup") || PathPrefix("/rest/v1/family")
             - traefik.http.services.users.loadbalancer.server.port=8080
