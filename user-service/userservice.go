@@ -23,7 +23,16 @@ func main() {
 	var person controllers.PersonController
 	var family controllers.FamilyController
 	var signup controllers.SignupController
+
 	var jwt token.JWTToken
+
+	// Create goroutine for stale signups
+	go func() {
+		for {
+			signup.RemoveStaleSignups()
+			time.Sleep(time.Second * 5)
+		}
+	}()
 
 	router := mux.NewRouter()
 	rest := router.PathPrefix("/rest/v1").Subrouter()

@@ -85,6 +85,20 @@ func (s *SignupController) CreateSignup(w http.ResponseWriter, r *http.Request) 
 	w.WriteHeader(http.StatusAccepted)
 }
 
+// RemoveStaleSignups will remove any signups older than
+// the specified time.
+func (s *SignupController) RemoveStaleSignups() {
+	deleteTime := time.Now().Unix() - 172800 // 172800s‬ == 48hrs
+
+	count, err := s.dao.DeleteStale(deleteTime)
+	if err != nil {
+		log.Println(err)
+	}
+	if count > 0 {
+		log.Println("[stale signups] Deleted:", count)
+	}
+}
+
 // generateCode returns a unique code of length.
 func (s *SignupController) generateCode(length int) string {
 	const letterBytes = "abcdefghijklmnopqrstuvwxyz0123456789"
