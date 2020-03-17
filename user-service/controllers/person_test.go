@@ -194,6 +194,14 @@ func TestChangeName(t *testing.T) {
 			out:            httptest.NewRecorder(),
 			expectedStatus: http.StatusNoContent,
 		},
+		{
+			name: "ChangeName bad token",
+			in: httptest.NewRequest("PATCH", "/rest/v1/users/", createReader(models.Person{
+				Name: "Updated2",
+			})),
+			out:            httptest.NewRecorder(),
+			expectedStatus: http.StatusBadRequest,
+		},
 	}
 
 	for _, test := range testCases {
@@ -204,7 +212,11 @@ func TestChangeName(t *testing.T) {
 			} else if strings.Compare(test.name, "Login User (Setup)") == 0 {
 				p.Login(test.out, test.in)
 			} else {
-				test.in.Header.Add("authorization", string("Bearer "+auth))
+				if strings.Compare(test.name, "ChangeName bad token") == 0 {
+					test.in.Header.Add("authorization", string("Bearer bad"))
+				} else {
+					test.in.Header.Add("authorization", string("Bearer "+auth))
+				}
 				p.ChangeName(test.out, test.in)
 			}
 			if test.out.Code != test.expectedStatus {
