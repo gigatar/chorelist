@@ -5,7 +5,7 @@ package models
 type Family struct {
 	ID     string   `json:"id,omitempty" bson:"_id,omitempty" example:""`
 	Name   string   `json:"name" bson:"name" example:"Doe"`
-	Person []Person `json:"person" bson:"person" example:""`
+	Person []string `json:"person" bson:"person" example:""`
 }
 
 // Validate input for family.

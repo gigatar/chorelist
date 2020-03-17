@@ -2,8 +2,6 @@ package controllers
 
 import (
 	"chorelist/user-service/daos"
-	"chorelist/user-service/models"
-	"encoding/json"
 	"log"
 	"net/http"
 	"strings"
@@ -14,33 +12,6 @@ import (
 // FamilyController data type.
 type FamilyController struct {
 	dao daos.FamilyDAO
-}
-
-// CreateFamily creates a new family in the system.
-func (f *FamilyController) CreateFamily(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-
-	// Deserialize request
-	var inputFamily models.Family
-	err := json.NewDecoder(r.Body).Decode(&inputFamily)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	// Validate input
-	if !inputFamily.Validate() {
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-
-	// Insert Family
-	if err := f.dao.CreateFamily(inputFamily); err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-
-	w.WriteHeader(http.StatusCreated)
 }
 
 // DeleteFamily deletes a family and all Persons assigned.
@@ -106,7 +77,8 @@ func (f *FamilyController) DeleteFamily(w http.ResponseWriter, r *http.Request) 
 
 	// Delete all family persons.
 	for _, person := range family.Person {
-		err = p.dao.DeletePerson(person.ID)
+		strippedPerson := person[len(userID):] // Strip HATEOAS location off front.
+		err = p.dao.DeletePerson(strippedPerson)
 		if err != nil {
 			log.Println(err)
 			w.WriteHeader(http.StatusInternalServerError)

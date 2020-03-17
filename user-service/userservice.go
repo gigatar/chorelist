@@ -33,12 +33,10 @@ func main() {
 	personEndpoint.HandleFunc("/login", person.Login).Methods("POST")
 
 	// Authenticated endpoints
-	personEndpoint.HandleFunc("", jwt.ValidateMiddleware(person.CreatePerson)).Methods("POST")
 	personEndpoint.HandleFunc("", jwt.ValidateMiddleware(person.DeletePerson)).Methods("DELETE")
 	personEndpoint.HandleFunc("/changename", jwt.ValidateMiddleware(person.ChangeName)).Methods("PATCH")
 	personEndpoint.HandleFunc("/changepassword", jwt.ValidateMiddleware(person.ChangePassword)).Methods("PATCH")
 
-	familyEndpoint.HandleFunc("", jwt.ValidateMiddleware(family.CreateFamily)).Methods("POST")
 	familyEndpoint.HandleFunc("", jwt.ValidateMiddleware(family.DeleteFamily)).Methods("DELETE")
 
 	// Configure CORS
