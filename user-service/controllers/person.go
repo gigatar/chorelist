@@ -152,7 +152,7 @@ func (p *PersonController) ChangeName(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusUnauthorized)
 		} else {
 			log.Println(err)
-			w.WriteHeader(http.StatusInternalServerError)
+			w.WriteHeader(http.StatusUnauthorized)
 		}
 		return
 	}
@@ -170,5 +170,78 @@ func (p *PersonController) ChangeName(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// success but no body
+	w.WriteHeader(http.StatusNoContent)
+}
+
+// ChangePassword of a person.
+func (p *PersonController) ChangePassword(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	// Deserialize request
+	var inputPerson models.Person
+	err := json.NewDecoder(r.Body).Decode(&inputPerson)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	// Validate input
+	if !inputPerson.ValidatePassword() {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	// Get userID to ensure we can only modify ourselves
+	var jwt token.JWTToken
+	userID, err := jwt.GetUser(r.Header.Get("authorization"))
+	if err != nil {
+		if strings.Contains(err.Error(), "Invalid token") {
+			w.WriteHeader(http.StatusUnauthorized)
+		} else {
+			log.Println(err)
+			w.WriteHeader(http.StatusUnauthorized)
+		}
+		return
+	}
+
+	if userID == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	// Get old password from database
+	oldPassword, err := p.dao.GetEncryptedPassword(userID)
+	if err != nil {
+		log.Println(err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	// Compare new and old with bcrypt
+	if err := bcrypt.CompareHashAndPassword([]byte(oldPassword), []byte(inputPerson.OldPassword)); err != nil {
+		if strings.Contains(err.Error(), "hashedPassword is not the hash of the given password") {
+			w.WriteHeader(http.StatusForbidden)
+		} else {
+			log.Println(err)
+			w.WriteHeader(http.StatusInternalServerError)
+		}
+		return
+	}
+
+	// Hash new
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(inputPerson.Password), bcryptPasswordCost)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	// Insert into database
+	err = p.dao.UpdatePassword(userID, string(hashedPassword))
+	if err != nil {
+		log.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
 	w.WriteHeader(http.StatusNoContent)
 }

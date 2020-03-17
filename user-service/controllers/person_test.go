@@ -195,12 +195,20 @@ func TestChangeName(t *testing.T) {
 			expectedStatus: http.StatusNoContent,
 		},
 		{
+			name: "ChangeName fail name validation",
+			in: httptest.NewRequest("PATCH", "/rest/v1/users/", createReader(models.Person{
+				Name: "",
+			})),
+			out:            httptest.NewRecorder(),
+			expectedStatus: http.StatusBadRequest,
+		},
+		{
 			name: "ChangeName bad token",
 			in: httptest.NewRequest("PATCH", "/rest/v1/users/", createReader(models.Person{
 				Name: "Updated2",
 			})),
 			out:            httptest.NewRecorder(),
-			expectedStatus: http.StatusBadRequest,
+			expectedStatus: http.StatusUnauthorized,
 		},
 	}
 
@@ -218,6 +226,103 @@ func TestChangeName(t *testing.T) {
 					test.in.Header.Add("authorization", string("Bearer "+auth))
 				}
 				p.ChangeName(test.out, test.in)
+			}
+			if test.out.Code != test.expectedStatus {
+				t.Error("Invalid response code:", test.out.Code)
+			}
+
+			if strings.Compare(test.name, "Login User (Setup)") == 0 {
+				auth = test.out.Header().Get("Authorization")
+			}
+
+		})
+	}
+}
+
+func TestPasswordChange(t *testing.T) {
+	// Create user for setup purposes
+	person := models.Person{
+		Email:    string(randSeq(5) + "@test.com"),
+		Password: string(randSeq(15)),
+		Name:     string(randSeq(10)),
+		Type:     "Parent",
+	}
+
+	// Authorization header
+	var auth string
+
+	newPassword := string(randSeq(15))
+
+	testCases := []struct {
+		name           string
+		in             *http.Request
+		out            *httptest.ResponseRecorder
+		expectedStatus int
+	}{
+		{
+			name:           "Create User (Setup)",
+			in:             httptest.NewRequest("GET", "/rest/v1/users", createReader(person)),
+			out:            httptest.NewRecorder(),
+			expectedStatus: http.StatusCreated,
+		},
+		{
+			name:           "Login User (Setup)",
+			in:             httptest.NewRequest("GET", "/rest/v1/users/login", createReader(person)),
+			out:            httptest.NewRecorder(),
+			expectedStatus: http.StatusOK,
+		},
+		{
+			name: "ChangePassword success",
+			in: httptest.NewRequest("PATCH", "/rest/v1/users/", createReader(models.Person{
+				Password:    newPassword,
+				OldPassword: person.Password,
+			})),
+			out:            httptest.NewRecorder(),
+			expectedStatus: http.StatusNoContent,
+		},
+		{
+			name: "ChangePassword bad old password",
+			in: httptest.NewRequest("PATCH", "/rest/v1/users/", createReader(models.Person{
+				Password:    newPassword,
+				OldPassword: "bad",
+			})),
+			out:            httptest.NewRecorder(),
+			expectedStatus: http.StatusForbidden,
+		},
+		{
+			name: "ChangePassword bad validation fail",
+			in: httptest.NewRequest("PATCH", "/rest/v1/users/", createReader(models.Person{
+				Password:    "bad",
+				OldPassword: newPassword,
+			})),
+			out:            httptest.NewRecorder(),
+			expectedStatus: http.StatusBadRequest,
+		},
+		{
+			name: "ChangePassword bad token",
+			in: httptest.NewRequest("PATCH", "/rest/v1/users/", createReader(models.Person{
+				Password:    person.Password,
+				OldPassword: newPassword,
+			})),
+			out:            httptest.NewRecorder(),
+			expectedStatus: http.StatusUnauthorized,
+		},
+	}
+
+	for _, test := range testCases {
+		p := PersonController{}
+		t.Run(test.name, func(t *testing.T) {
+			if strings.Compare(test.name, "Create User (Setup)") == 0 {
+				p.CreatePerson(test.out, test.in)
+			} else if strings.Compare(test.name, "Login User (Setup)") == 0 {
+				p.Login(test.out, test.in)
+			} else {
+				if strings.Compare(test.name, "ChangePassword bad token") == 0 {
+					test.in.Header.Add("authorization", string("Bearer bad"))
+				} else {
+					test.in.Header.Add("authorization", string("Bearer "+auth))
+				}
+				p.ChangePassword(test.out, test.in)
 			}
 			if test.out.Code != test.expectedStatus {
 				t.Error("Invalid response code:", test.out.Code)

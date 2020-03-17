@@ -79,3 +79,48 @@ func (p *PersonDAO) ChangeName(userID, newName string) error {
 
 	return nil
 }
+
+// GetEncryptedPassword for person from database for password change.
+func (p *PersonDAO) GetEncryptedPassword(userID string) (string, error) {
+	id, err := primitive.ObjectIDFromHex(userID)
+	if err != nil {
+		return "", err
+	}
+
+	collection := database.DB.GetPersonCollection()
+
+	ctx, cancel := context.WithTimeout(context.Background(), database.DB.Timeout)
+	defer cancel()
+
+	findOptions := options.FindOne()
+	findOptions.SetProjection(bson.M{"password": 1})
+
+	var person models.Person
+	err = collection.FindOne(ctx, bson.M{"_id": id}, findOptions).Decode(&person)
+	if err != nil {
+		return "", err
+	}
+
+	return person.Password, nil
+}
+
+// UpdatePassword updates a users password.
+func (p *PersonDAO) UpdatePassword(userID, hashedPassword string) error {
+	id, err := primitive.ObjectIDFromHex(userID)
+	if err != nil {
+		return err
+	}
+
+	collection := database.DB.GetPersonCollection()
+
+	ctx, cancel := context.WithTimeout(context.Background(), database.DB.Timeout)
+	defer cancel()
+
+	// Don't need result, no documents is implicit in the error.
+	_, err = collection.UpdateOne(ctx, bson.M{"_id": id}, bson.M{"$set": bson.M{"password": hashedPassword}})
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
