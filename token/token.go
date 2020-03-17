@@ -80,6 +80,33 @@ func (j JWTToken) GetUser(inputToken string) (string, error) {
 	return "", nil
 }
 
+// GetFamily returns the familyID from the JWT Token.
+func (j JWTToken) GetFamily(inputToken string) (string, error) {
+	bearerToken := strings.Split(inputToken, " ")
+	if len(bearerToken) != 2 {
+		return "", errors.New("Invalid token")
+	}
+
+	token, err := jwt.ParseWithClaims(bearerToken[1], &CustomClaims{}, func(token *jwt.Token) (interface{}, error) {
+		return []byte(tokenPassword), nil
+	})
+	if err != nil {
+		if strings.Contains(err.Error(), "token is expired") {
+			return "", errors.New("Invalid token")
+		} else if strings.Contains(err.Error(), "signature is invalid") {
+
+			return "", errors.New("Invalid token")
+		}
+		return "", err
+	}
+
+	if claims, ok := token.Claims.(*CustomClaims); ok && token.Valid {
+		return claims.FamilyID, nil
+	}
+
+	return "", nil
+}
+
 // // RefreshToken regenerates our token.
 // func (v *JWTToken) RefreshToken(w http.ResponseWriter, r *http.Request) {
 // 	w.Header().Set("Content-Type", "application/json")
