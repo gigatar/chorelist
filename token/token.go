@@ -68,7 +68,7 @@ func (j JWTToken) GetUser(inputToken string) (string, error) {
 			return "", errors.New("Invalid token")
 		} else if strings.Contains(err.Error(), "signature is invalid") {
 
-			return "", errors.New("Invalid Token")
+			return "", errors.New("Invalid token")
 		}
 		return "", err
 	}
