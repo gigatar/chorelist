@@ -17,6 +17,7 @@ var DB Database
 const (
 	databaseName         = "ChoreList"
 	personCollectionName = "persons"
+	familyCollectionName = "families"
 )
 
 // Database is our instance.
@@ -73,4 +74,9 @@ func (db *Database) createUniquePersonIndex() error {
 // GetPersonCollection is a helper function to return our person collection.
 func (db *Database) GetPersonCollection() *mongo.Collection {
 	return DB.Client.Database(databaseName).Collection(personCollectionName)
+}
+
+// GetFamilyCollection is a helper function to return our family collection.
+func (db *Database) GetFamilyCollection() *mongo.Collection {
+	return DB.Client.Database(databaseName).Collection(familyCollectionName)
 }
