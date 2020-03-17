@@ -15,9 +15,10 @@ import (
 var DB Database
 
 const (
-	databaseName         = "ChoreList"
+	databaseName         = "ChoreList_UserService"
 	personCollectionName = "persons"
 	familyCollectionName = "families"
+	signupCollectionName = "signup"
 )
 
 // Database is our instance.
@@ -42,6 +43,10 @@ func (db *Database) Init() error {
 	// Create indexes
 	if err := db.createUniquePersonIndex(); err != nil {
 		return errors.New("createUserIndex:" + err.Error())
+	}
+
+	if err := db.createUniqueSignupIndex(); err != nil {
+		return errors.New("createSignupIndex:" + err.Error())
 	}
 
 	return nil
@@ -71,6 +76,42 @@ func (db *Database) createUniquePersonIndex() error {
 	return nil
 }
 
+// createUniqueSignupIndex ensures that all emails and codes are unique.
+func (db *Database) createUniqueSignupIndex() error {
+	// Create the required index
+	collection := DB.GetSignupCollection()
+	var indexes []mongo.IndexModel
+
+	emailOptions := options.Index()
+	emailOptions.SetUnique(true)
+	emailOptions.SetName("uniqueEmail")
+	emailIndex := mongo.IndexModel{
+		Keys:    bsonx.Doc{{Key: "person.email", Value: bsonx.Int32(1)}},
+		Options: emailOptions,
+	}
+	indexes = append(indexes, emailIndex)
+
+	codeOptions := options.Index()
+	codeOptions.SetUnique(true)
+	codeOptions.SetName("uniqueCode")
+	codeIndex := mongo.IndexModel{
+		Keys:    bsonx.Doc{{Key: "code", Value: bsonx.Int32(1)}},
+		Options: codeOptions,
+	}
+
+	indexes = append(indexes, codeIndex)
+
+	ctx, cancel := context.WithTimeout(context.Background(), DB.Timeout)
+	defer cancel()
+
+	_, err := collection.Indexes().CreateMany(ctx, indexes)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // GetPersonCollection is a helper function to return our person collection.
 func (db *Database) GetPersonCollection() *mongo.Collection {
 	return DB.Client.Database(databaseName).Collection(personCollectionName)
@@ -79,4 +120,9 @@ func (db *Database) GetPersonCollection() *mongo.Collection {
 // GetFamilyCollection is a helper function to return our family collection.
 func (db *Database) GetFamilyCollection() *mongo.Collection {
 	return DB.Client.Database(databaseName).Collection(familyCollectionName)
+}
+
+// GetSignupCollection is a helper function to return our signup collection.
+func (db *Database) GetSignupCollection() *mongo.Collection {
+	return DB.Client.Database(databaseName).Collection(signupCollectionName)
 }

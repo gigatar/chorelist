@@ -22,15 +22,18 @@ func main() {
 
 	var person controllers.PersonController
 	var family controllers.FamilyController
+	var signup controllers.SignupController
 	var jwt token.JWTToken
 
 	router := mux.NewRouter()
 	rest := router.PathPrefix("/rest/v1").Subrouter()
 	personEndpoint := rest.PathPrefix("/users").Subrouter()
 	familyEndpoint := rest.PathPrefix("/families").Subrouter()
+	signupEndpoint := rest.PathPrefix("/signup").Subrouter()
 
 	// Unauthenticated endpoints
 	personEndpoint.HandleFunc("/login", person.Login).Methods("POST")
+	signupEndpoint.HandleFunc("", signup.CreateSignup).Methods("POST")
 
 	// Authenticated endpoints
 	personEndpoint.HandleFunc("", jwt.ValidateMiddleware(person.DeletePerson)).Methods("DELETE")

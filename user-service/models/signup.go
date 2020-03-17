@@ -1,12 +1,11 @@
 package models
 
-import "time"
-
 // Signup data model.
 type Signup struct {
-	Person Person    `json:"person" bson:"person"`
-	Family Family    `json:"family" bson:"family"`
-	Expire time.Time `json:"expire,omitempty" bson:"expire,omitempty"`
+	Person     Person `json:"person" bson:"person"`
+	Family     Family `json:"family" bson:"family"`
+	SignupTime int64  `json:"signupTime,omitempty" bson:"signupTime,omitempty"`
+	Code       string `json:"code,omitempty" bson:"code,omitempty"`
 }
 
 // Validate signup information.
