@@ -1,7 +1,6 @@
 package token
 
 import (
-	"TaskTracker/task-service/models"
 	"errors"
 	"log"
 	"net"
@@ -69,7 +68,7 @@ func (v JWTToken) GetUser(inputToken string) (string, error) {
 		return "", errors.New("Invalid token")
 	}
 
-	token, err := jwt.ParseWithClaims(bearerToken[1], &models.CustomClaims{}, func(token *jwt.Token) (interface{}, error) {
+	token, err := jwt.ParseWithClaims(bearerToken[1], CustomClaims{}, func(token *jwt.Token) (interface{}, error) {
 		return []byte(tokenPassword), nil
 	})
 	if err != nil {
@@ -82,8 +81,8 @@ func (v JWTToken) GetUser(inputToken string) (string, error) {
 		return "", err
 	}
 
-	if claims, ok := token.Claims.(*models.CustomClaims); ok && token.Valid {
-		return claims.ID, nil
+	if claims, ok := token.Claims.(CustomClaims); ok && token.Valid {
+		return claims.UserID, nil
 	}
 
 	return "", nil
@@ -132,7 +131,7 @@ func (v *JWTToken) ValidateMiddleware(next http.HandlerFunc) http.HandlerFunc {
 			return
 		}
 
-		token, err := jwt.ParseWithClaims(bearerToken[1], &models.CustomClaims{}, func(token *jwt.Token) (interface{}, error) {
+		token, err := jwt.ParseWithClaims(bearerToken[1], &CustomClaims{}, func(token *jwt.Token) (interface{}, error) {
 			return []byte(tokenPassword), nil
 		})
 		if err != nil {
@@ -157,8 +156,8 @@ func (v *JWTToken) ValidateMiddleware(next http.HandlerFunc) http.HandlerFunc {
 			return
 		}
 
-		if claims, ok := token.Claims.(*models.CustomClaims); ok && token.Valid {
-			if serverIP != claims.Audience {
+		if claims, ok := token.Claims.(*CustomClaims); ok && token.Valid {
+			if serverIP != claims.Standard.Audience {
 				w.WriteHeader(http.StatusUnauthorized)
 				return
 			}
