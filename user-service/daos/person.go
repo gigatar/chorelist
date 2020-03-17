@@ -5,6 +5,7 @@ import (
 	"chorelist/user-service/models"
 	"context"
 	"encoding/json"
+	"errors"
 	"strings"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -120,6 +121,30 @@ func (p *PersonDAO) UpdatePassword(userID, hashedPassword string) error {
 	_, err = collection.UpdateOne(ctx, bson.M{"_id": id}, bson.M{"$set": bson.M{"password": hashedPassword}})
 	if err != nil {
 		return err
+	}
+
+	return nil
+}
+
+// DeletePerson removes them from the database
+func (p *PersonDAO) DeletePerson(userID string) error {
+	id, err := primitive.ObjectIDFromHex(userID)
+	if err != nil {
+		return err
+	}
+
+	collection := database.DB.GetPersonCollection()
+
+	ctx, cancel := context.WithTimeout(context.Background(), database.DB.Timeout)
+	defer cancel()
+
+	result, err := collection.DeleteOne(ctx, bson.M{"_id": id})
+	if err != nil {
+		return err
+	}
+
+	if result.DeletedCount != 1 {
+		return errors.New("no documents")
 	}
 
 	return nil

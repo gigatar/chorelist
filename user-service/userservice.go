@@ -32,6 +32,7 @@ func main() {
 
 	// Authenticated endpoints
 	personEndpoint.HandleFunc("", jwt.ValidateMiddleware(person.CreatePerson)).Methods("POST")
+	personEndpoint.HandleFunc("", jwt.ValidateMiddleware(person.DeletePerson)).Methods("DELETE")
 	personEndpoint.HandleFunc("/changename", jwt.ValidateMiddleware(person.ChangeName)).Methods("PATCH")
 	personEndpoint.HandleFunc("/changepassword", jwt.ValidateMiddleware(person.ChangePassword)).Methods("PATCH")
 

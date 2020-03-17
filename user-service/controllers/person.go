@@ -245,3 +245,39 @@ func (p *PersonController) ChangePassword(w http.ResponseWriter, r *http.Request
 
 	w.WriteHeader(http.StatusNoContent)
 }
+
+// DeletePerson removes a person from the system
+func (p *PersonController) DeletePerson(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	// Get userID to ensure we can only modify ourselves
+	var jwt token.JWTToken
+	userID, err := jwt.GetUser(r.Header.Get("authorization"))
+	if err != nil {
+		if strings.Contains(err.Error(), "Invalid token") {
+			w.WriteHeader(http.StatusUnauthorized)
+		} else {
+			log.Println(err)
+			w.WriteHeader(http.StatusUnauthorized)
+		}
+		return
+	}
+
+	if userID == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	err = p.dao.DeletePerson(userID)
+	if err != nil {
+		if strings.Contains(err.Error(), "no documents") {
+			w.WriteHeader(http.StatusBadRequest)
+		} else {
+			log.Println(err)
+			w.WriteHeader(http.StatusInternalServerError)
+		}
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}
