@@ -15,10 +15,7 @@ const tokenDuration = 5 * 60                      // In Seconds
 const tokenPassword = "Y[6=fJMxa1PRxnW4hxEg@5.Pu" // CHANGE ME FOR PRODUCTION!!!!!
 
 // JWTToken data type.
-type JWTToken struct {
-	Token  string `json:"token"`
-	Expire int64  `json:"expires"`
-}
+type JWTToken struct{}
 
 // CustomClaims data type.
 type CustomClaims struct {
@@ -29,7 +26,7 @@ type CustomClaims struct {
 }
 
 // CreateJWT Creates and returns a new JWT.
-func (v *JWTToken) CreateJWT(remoteHost, userID, familyID string) (string, error) {
+func (j *JWTToken) CreateJWT(remoteHost, userID, familyID string) (string, error) {
 	// Get IP from Remote Addr:
 	serverIP, _, err := net.SplitHostPort(remoteHost)
 	if err != nil {
@@ -57,13 +54,13 @@ func (v *JWTToken) CreateJWT(remoteHost, userID, familyID string) (string, error
 }
 
 // GetUser returns the user from the JWT Token.
-func (v JWTToken) GetUser(inputToken string) (string, error) {
+func (j JWTToken) GetUser(inputToken string) (string, error) {
 	bearerToken := strings.Split(inputToken, " ")
 	if len(bearerToken) != 2 {
 		return "", errors.New("Invalid token")
 	}
 
-	token, err := jwt.ParseWithClaims(bearerToken[1], CustomClaims{}, func(token *jwt.Token) (interface{}, error) {
+	token, err := jwt.ParseWithClaims(bearerToken[1], &CustomClaims{}, func(token *jwt.Token) (interface{}, error) {
 		return []byte(tokenPassword), nil
 	})
 	if err != nil {
@@ -76,7 +73,7 @@ func (v JWTToken) GetUser(inputToken string) (string, error) {
 		return "", err
 	}
 
-	if claims, ok := token.Claims.(CustomClaims); ok && token.Valid {
+	if claims, ok := token.Claims.(*CustomClaims); ok && token.Valid {
 		return claims.UserID, nil
 	}
 
@@ -110,7 +107,7 @@ func (v JWTToken) GetUser(inputToken string) (string, error) {
 // }
 
 // ValidateMiddleware is how we ensure that only authorized persons are able to access endpoints.
-func (v *JWTToken) ValidateMiddleware(next http.HandlerFunc) http.HandlerFunc {
+func (j *JWTToken) ValidateMiddleware(next http.HandlerFunc) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 
