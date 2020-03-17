@@ -21,11 +21,13 @@ func main() {
 	}
 
 	var person controllers.PersonController
+	var family controllers.FamilyController
 	var jwt token.JWTToken
 
 	router := mux.NewRouter()
 	rest := router.PathPrefix("/rest/v1").Subrouter()
 	personEndpoint := rest.PathPrefix("/users").Subrouter()
+	familyEndpoint := rest.PathPrefix("/families").Subrouter()
 
 	// Unauthenticated endpoints
 	personEndpoint.HandleFunc("/login", person.Login).Methods("POST")
@@ -35,6 +37,9 @@ func main() {
 	personEndpoint.HandleFunc("", jwt.ValidateMiddleware(person.DeletePerson)).Methods("DELETE")
 	personEndpoint.HandleFunc("/changename", jwt.ValidateMiddleware(person.ChangeName)).Methods("PATCH")
 	personEndpoint.HandleFunc("/changepassword", jwt.ValidateMiddleware(person.ChangePassword)).Methods("PATCH")
+
+	familyEndpoint.HandleFunc("", jwt.ValidateMiddleware(family.CreateFamily)).Methods("POST")
+	familyEndpoint.HandleFunc("", jwt.ValidateMiddleware(family.DeleteFamily)).Methods("DELETE")
 
 	// Configure CORS
 	allowedMethods := handlers.AllowedMethods([]string{

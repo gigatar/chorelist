@@ -149,3 +149,28 @@ func (p *PersonDAO) DeletePerson(userID string) error {
 
 	return nil
 }
+
+// GetPersonType returns the type field for a user.
+func (p *PersonDAO) GetPersonType(userID string) (string, error) {
+	id, err := primitive.ObjectIDFromHex(userID)
+	if err != nil {
+		return "", err
+	}
+
+	collection := database.DB.GetPersonCollection()
+
+	ctx, cancel := context.WithTimeout(context.Background(), database.DB.Timeout)
+	defer cancel()
+
+	var person models.Person
+
+	findOptions := options.FindOne()
+	findOptions.SetProjection(bson.M{"type": 1})
+
+	err = collection.FindOne(ctx, bson.M{"_id": id}).Decode(&person)
+	if err != nil {
+		return "", err
+	}
+
+	return person.Type, nil
+}

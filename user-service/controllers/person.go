@@ -281,3 +281,14 @@ func (p *PersonController) DeletePerson(w http.ResponseWriter, r *http.Request) 
 
 	w.WriteHeader(http.StatusNoContent)
 }
+
+// getPersonType returns the type of person based on UID
+func (p *PersonController) getPersonType(personID string) (string, error) {
+
+	personType, err := p.dao.GetPersonType(personID)
+	if err != nil {
+		return "", err
+	}
+
+	return personType, nil
+}

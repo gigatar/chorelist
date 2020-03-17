@@ -17,7 +17,7 @@ type Person struct {
 	FamilyID    string `json:"familyID" bson:"familyID" example:""`
 }
 
-// Validate input data for Person
+// Validate input data for Person.
 func (p Person) Validate() bool {
 	if !p.ValidateName() {
 		return false
