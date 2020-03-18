@@ -10,8 +10,12 @@ import (
 	"strings"
 	"time"
 
+	"github.com/gorilla/mux"
+
 	"golang.org/x/crypto/bcrypt"
 )
+
+const codeLength = 15
 
 // SignupController defines all endpoints for interacting with signup.
 type SignupController struct {
@@ -59,8 +63,8 @@ func (s *SignupController) CreateSignup(w http.ResponseWriter, r *http.Request) 
 	inputSignup.Person.Password = string(hashedPassword)
 
 	// Create Unique Code
-	code := s.generateCode(15)
-	if len(code) != 15 {
+	code := s.generateCode(codeLength)
+	if len(code) != codeLength {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -83,6 +87,64 @@ func (s *SignupController) CreateSignup(w http.ResponseWriter, r *http.Request) 
 	//TODO: Email code
 
 	w.WriteHeader(http.StatusAccepted)
+}
+
+// SignupVerify approves the signup request and creates the Person and Family
+func (s *SignupController) SignupVerify(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	code := mux.Vars(r)["code"]
+	if len(code) != codeLength {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	// Get Request for Code
+	signup, err := s.dao.GetSignup(code)
+	if err != nil {
+		if strings.Contains(err.Error(), "no documents") {
+			w.WriteHeader(http.StatusNotFound)
+		} else {
+			log.Println(err)
+			w.WriteHeader(http.StatusInternalServerError)
+		}
+		return
+	}
+
+	// Create Person
+	var p PersonController
+	personID, err := p.createPerson(signup.Person)
+	if err != nil {
+		log.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	// Create Family
+	signup.Family.Person = []string{personID}
+	var f FamilyController
+
+	familyID, err := f.createFamily(signup.Family)
+	if err != nil {
+		log.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	// Update Person with Family ID
+	err = p.dao.ChangeFamilyID(personID, familyID)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	// Delete signup request
+	if err := s.dao.DeleteSignup(code); err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
 }
 
 // RemoveStaleSignups will remove any signups older than

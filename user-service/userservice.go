@@ -43,6 +43,7 @@ func main() {
 	// Unauthenticated endpoints
 	personEndpoint.HandleFunc("/login", person.Login).Methods("POST")
 	signupEndpoint.HandleFunc("", signup.CreateSignup).Methods("POST")
+	signupEndpoint.HandleFunc("/{code}", signup.SignupVerify).Methods("GET")
 
 	// Authenticated endpoints
 	personEndpoint.HandleFunc("", jwt.ValidateMiddleware(person.DeletePerson)).Methods("DELETE")

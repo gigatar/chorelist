@@ -193,3 +193,24 @@ func (p *PersonDAO) EmailExists(email string) (bool, error) {
 
 	return true, nil
 }
+
+// ChangeFamilyID updates a person's name in the database.
+func (p *PersonDAO) ChangeFamilyID(userID, familyID string) error {
+
+	id, err := primitive.ObjectIDFromHex(userID)
+	if err != nil {
+		return err
+	}
+	collection := database.DB.GetPersonCollection()
+
+	ctx, cancel := context.WithTimeout(context.Background(), database.DB.Timeout)
+	defer cancel()
+
+	// We don't need to do anything with the result.
+	_, err = collection.UpdateOne(ctx, bson.M{"_id": id}, bson.M{"$set": bson.M{"familyID": familyID}})
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
