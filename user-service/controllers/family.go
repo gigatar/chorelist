@@ -3,7 +3,9 @@ package controllers
 import (
 	"chorelist/user-service/daos"
 	"chorelist/user-service/models"
+	"encoding/json"
 	"errors"
+	"fmt"
 	"log"
 	"net/http"
 	"strings"
@@ -110,4 +112,108 @@ func (f *FamilyController) createFamily(family models.Family) (string, error) {
 		return "", err
 	}
 	return id, nil
+}
+
+// AddFamilyMember adds a new family member to the system.
+func (f *FamilyController) AddFamilyMember(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	// Decode person input
+	var inputPerson models.Person
+	err := json.NewDecoder(r.Body).Decode(&inputPerson)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	// Validate input
+	if !inputPerson.Validate() {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	// Get userID from JWT
+	var jwt token.JWTToken
+	userID, err := jwt.GetUser(r.Header.Get("authorization"))
+	if err != nil {
+		if strings.Contains(err.Error(), "Invalid token") {
+			w.WriteHeader(http.StatusUnauthorized)
+		} else {
+			log.Println(err)
+			w.WriteHeader(http.StatusUnauthorized)
+		}
+		return
+	}
+
+	if userID == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	// Get FamilyID from JWT
+	familyID, err := jwt.GetFamily(r.Header.Get("authorization"))
+	if err != nil {
+		if strings.Contains(err.Error(), "Invalid token") {
+			w.WriteHeader(http.StatusUnauthorized)
+		} else {
+			log.Println(err)
+			w.WriteHeader(http.StatusUnauthorized)
+		}
+		return
+	}
+
+	if familyID == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	//Make sure Parent
+	var p PersonController
+	personType, err := p.getPersonType(userID)
+	if err != nil {
+		log.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	if strings.Compare(strings.ToLower(personType), "parent") != 0 {
+		w.WriteHeader(http.StatusForbidden)
+		return
+	}
+
+	// Add familyID to person
+	inputPerson.FamilyID = familyID
+
+	// Create person
+	newPersonID, err := p.createPerson(inputPerson)
+	if err != nil {
+		if strings.Contains(err.Error(), "duplicate key") {
+			w.WriteHeader(http.StatusConflict)
+		} else {
+			log.Println(err)
+			w.WriteHeader(http.StatusInternalServerError)
+		}
+		return
+	}
+
+	// Get Family
+	family, err := f.dao.GetFamily(familyID)
+	if err != nil {
+		log.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	// Add person to family
+	family.Person = append(family.Person, newPersonID)
+	fmt.Println(family.Person)
+	err = f.dao.UpdateFamilyMember(family)
+	if err != nil {
+		log.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	// Return success
+	w.WriteHeader(http.StatusNoContent)
 }

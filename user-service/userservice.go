@@ -38,7 +38,7 @@ func main() {
 	rest := router.PathPrefix("/rest/v1").Subrouter()
 	personEndpoint := rest.PathPrefix("/users").Subrouter()
 	familyEndpoint := rest.PathPrefix("/families").Subrouter()
-	signupEndpoint := rest.PathPrefix("/signup").Subrouter()
+	signupEndpoint := rest.PathPrefix("/signups").Subrouter()
 
 	// Unauthenticated endpoints
 	personEndpoint.HandleFunc("/login", person.Login).Methods("POST")
@@ -51,6 +51,7 @@ func main() {
 	personEndpoint.HandleFunc("/changepassword", jwt.ValidateMiddleware(person.ChangePassword)).Methods("PATCH")
 
 	familyEndpoint.HandleFunc("", jwt.ValidateMiddleware(family.DeleteFamily)).Methods("DELETE")
+	familyEndpoint.HandleFunc("/add", jwt.ValidateMiddleware(family.AddFamilyMember)).Methods("POST")
 
 	// Configure CORS
 	allowedMethods := handlers.AllowedMethods([]string{

@@ -112,8 +112,9 @@ func (s *SignupController) SignupVerify(w http.ResponseWriter, r *http.Request) 
 	}
 
 	// Create Person
+	// Note: we use the dao method because the controller method will re-hash the password.
 	var p PersonController
-	personID, err := p.createPerson(signup.Person)
+	personID, err := p.dao.CreatePerson(signup.Person)
 	if err != nil {
 		log.Println(err)
 		w.WriteHeader(http.StatusInternalServerError)

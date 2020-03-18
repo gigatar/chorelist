@@ -5,6 +5,7 @@ import (
 	"chorelist/user-service/models"
 	"context"
 	"encoding/json"
+	"errors"
 	"strings"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -76,4 +77,28 @@ func (f *FamilyDAO) GetFamily(familyID string) (models.Family, error) {
 	}
 
 	return family, nil
+}
+
+// UpdateFamilyMember updates a family in the database.
+func (f *FamilyDAO) UpdateFamilyMember(family models.Family) error {
+	id, err := primitive.ObjectIDFromHex(family.ID)
+	if err != nil {
+		return err
+	}
+
+	collection := database.DB.GetFamilyCollection()
+
+	ctx, cancel := context.WithTimeout(context.Background(), database.DB.Timeout)
+	defer cancel()
+
+	result, err := collection.UpdateOne(ctx, bson.M{"_id": id}, bson.M{"$set": bson.M{"person": family.Person}})
+	if err != nil {
+		return err
+	}
+
+	if result.ModifiedCount == 0 {
+		return errors.New("Family members not updated")
+	}
+
+	return nil
 }
