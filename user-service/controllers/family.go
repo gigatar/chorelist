@@ -215,6 +215,7 @@ func (f *FamilyController) AddFamilyMember(w http.ResponseWriter, r *http.Reques
 	}
 
 	// Return success
+	w.Header().Add("Location", "/rest/v1/users/"+newPersonID)
 	w.WriteHeader(http.StatusNoContent)
 }
 
