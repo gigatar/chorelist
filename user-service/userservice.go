@@ -51,7 +51,8 @@ func main() {
 	personEndpoint.HandleFunc("/changepassword", jwt.ValidateMiddleware(person.ChangePassword)).Methods("PATCH")
 
 	familyEndpoint.HandleFunc("", jwt.ValidateMiddleware(family.DeleteFamily)).Methods("DELETE")
-	familyEndpoint.HandleFunc("/add", jwt.ValidateMiddleware(family.AddFamilyMember)).Methods("POST")
+	familyEndpoint.HandleFunc("/persons/add", jwt.ValidateMiddleware(family.AddFamilyMember)).Methods("POST")
+	familyEndpoint.HandleFunc("/persons/{personID}", jwt.ValidateMiddleware(family.RemoveFamilyMember)).Methods("DELETE")
 
 	// Configure CORS
 	allowedMethods := handlers.AllowedMethods([]string{

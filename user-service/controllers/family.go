@@ -5,10 +5,11 @@ import (
 	"chorelist/user-service/models"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"log"
 	"net/http"
 	"strings"
+
+	"github.com/gorilla/mux"
 
 	"github.com/gigatar/chorelist/token"
 )
@@ -206,7 +207,6 @@ func (f *FamilyController) AddFamilyMember(w http.ResponseWriter, r *http.Reques
 
 	// Add person to family
 	family.Person = append(family.Person, newPersonID)
-	fmt.Println(family.Person)
 	err = f.dao.UpdateFamilyMember(family)
 	if err != nil {
 		log.Println(err)
@@ -215,5 +215,113 @@ func (f *FamilyController) AddFamilyMember(w http.ResponseWriter, r *http.Reques
 	}
 
 	// Return success
+	w.Header().Add("Location", "/rest/v1/users/"+newPersonID)
+	w.WriteHeader(http.StatusNoContent)
+}
+
+// RemoveFamilyMember removeos a family member and deletes the person.
+func (f *FamilyController) RemoveFamilyMember(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	personID := mux.Vars(r)["personID"]
+	if len(personID) == 0 {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	// Get userID from JWT
+	var jwt token.JWTToken
+	userID, err := jwt.GetUser(r.Header.Get("authorization"))
+	if err != nil {
+		if strings.Contains(err.Error(), "Invalid token") {
+			w.WriteHeader(http.StatusUnauthorized)
+		} else {
+			log.Println(err)
+			w.WriteHeader(http.StatusUnauthorized)
+		}
+		return
+	}
+
+	if userID == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	// Get FamilyID from JWT
+	familyID, err := jwt.GetFamily(r.Header.Get("authorization"))
+	if err != nil {
+		if strings.Contains(err.Error(), "Invalid token") {
+			w.WriteHeader(http.StatusUnauthorized)
+		} else {
+			log.Println(err)
+			w.WriteHeader(http.StatusUnauthorized)
+		}
+		return
+	}
+
+	if familyID == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	//Make sure Parent
+	var p PersonController
+	personType, err := p.getPersonType(userID)
+	if err != nil {
+		log.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	if strings.Compare(strings.ToLower(personType), "parent") != 0 {
+		w.WriteHeader(http.StatusForbidden)
+		return
+	}
+
+	// Make sure not removing self.
+	if strings.Compare(personID, userID) == 0 {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+
+	}
+
+	// Get Family
+	family, err := f.dao.GetFamily(familyID)
+	if err != nil {
+		log.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	// Remove the person from the family
+	for i := 0; i < len(family.Person); i++ {
+		if family.Person[i] == personID {
+			family.Person = append(family.Person[:i], family.Person[i+1:]...)
+		}
+	}
+
+	err = f.dao.UpdateFamilyMember(family)
+	if err != nil {
+		if strings.Contains(err.Error(), "Family members not updated") {
+			w.WriteHeader(http.StatusBadRequest)
+		} else {
+			log.Println(err)
+			w.WriteHeader(http.StatusInternalServerError)
+		}
+		return
+	}
+
+	// Delete person from system.
+	err = p.dao.DeletePerson(personID)
+	if err != nil {
+		if strings.Contains(err.Error(), "no documents") {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		log.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
 	w.WriteHeader(http.StatusNoContent)
 }
