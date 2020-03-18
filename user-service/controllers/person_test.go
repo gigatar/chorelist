@@ -4,11 +4,13 @@ import (
 	"chorelist/user-service/database"
 	"chorelist/user-service/models"
 	"encoding/json"
+	"errors"
 	"io"
 	"log"
 	"math/rand"
 	"net/http"
 	"net/http/httptest"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -29,14 +31,80 @@ func createReader(input interface{}) io.Reader {
 }
 
 func randSeq(n int) string {
+	time.Sleep(time.Millisecond)
 	letters := []rune("abcdefghijklmnopqrstuvwxyz")
-	rand.Seed(time.Now().UnixNano())
+	r := rand.New(rand.NewSource(time.Now().UnixNano()))
 
 	b := make([]rune, n)
 	for i := range b {
-		b[i] = letters[rand.Intn(len(letters))]
+		b[i] = letters[r.Intn(len(letters))]
 	}
 	return string(b)
+}
+
+func createUserAndLogin() (string, error) {
+	// Create user for setup purposes
+	person := models.Person{
+		Email:    string(randSeq(5) + "@test.com"),
+		Password: string(randSeq(15)),
+		Name:     string(randSeq(10)),
+		Type:     "Parent",
+	}
+	family := models.Family{
+		Name: string(randSeq(5)),
+	}
+
+	// Authorization header
+	var auth string
+
+	actions := []struct {
+		name           string
+		in             *http.Request
+		out            *httptest.ResponseRecorder
+		expectedStatus int
+	}{
+
+		{
+			name:           "Login User (Setup)",
+			in:             httptest.NewRequest("GET", "/rest/v1/users/login", createReader(person)),
+			out:            httptest.NewRecorder(),
+			expectedStatus: http.StatusOK,
+		},
+	}
+
+	var p PersonController
+	var f FamilyController
+	// Create user
+	uid, err := p.createPerson(person)
+	if err != nil {
+		return "", err
+	}
+	family.Person = []string{uid}
+
+	// Create family
+	fid, err := f.createFamily(family)
+	if err != nil {
+		return "", err
+	}
+
+	// Add family to user
+	person.FamilyID = fid
+	if err := p.dao.ChangeFamilyID(uid, fid); err != nil {
+		return "", err
+	}
+
+	for _, action := range actions {
+
+		p.Login(action.out, action.in)
+
+		action.in.Header.Add("authorization", string("Bearer "+auth))
+		if action.out.Code != action.expectedStatus {
+			return "", errors.New("Unable to complete action: " + action.name + "return: " + strconv.Itoa(action.out.Code))
+		}
+		auth = action.out.Header().Get("Authorization")
+	}
+
+	return auth, nil
 }
 
 func TestLogin(t *testing.T) {
