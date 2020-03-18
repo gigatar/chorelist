@@ -37,6 +37,7 @@ func (p *PersonController) Login(w http.ResponseWriter, r *http.Request) {
 	// Pull user from database.
 	person, err := p.dao.Login(inputPerson.Email)
 	if err != nil {
+		log.Println("Bad user")
 		if strings.Contains(err.Error(), "no documents") {
 			w.WriteHeader(http.StatusBadRequest)
 		} else {
@@ -50,6 +51,7 @@ func (p *PersonController) Login(w http.ResponseWriter, r *http.Request) {
 	// Validate password
 	if err := bcrypt.CompareHashAndPassword([]byte(person.Password), []byte(inputPerson.Password)); err != nil {
 		if strings.Contains(err.Error(), "hashedPassword is not the hash of the given password") {
+			log.Println("Bad Password")
 			w.WriteHeader(http.StatusBadRequest)
 		} else {
 			log.Println(err)
