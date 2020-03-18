@@ -95,7 +95,7 @@ func TestLogin(t *testing.T) {
 					t.Error(err)
 					t.Fail()
 				}
-				if err := p.createPerson(person); err != nil {
+				if _, err := p.createPerson(person); err != nil {
 					t.Error(err)
 					t.Fail()
 				}
@@ -175,7 +175,7 @@ func TestChangeName(t *testing.T) {
 					t.Error(err)
 					t.Fail()
 				}
-				if err := p.createPerson(person); err != nil {
+				if _, err := p.createPerson(person); err != nil {
 					t.Error(err)
 					t.Fail()
 				}
@@ -281,7 +281,7 @@ func TestPasswordChange(t *testing.T) {
 					t.Error(err)
 					t.Fail()
 				}
-				if err := p.createPerson(person); err != nil {
+				if _, err := p.createPerson(person); err != nil {
 					t.Error(err)
 					t.Fail()
 				}
@@ -367,7 +367,7 @@ func TestPersonDelete(t *testing.T) {
 					t.Error(err)
 					t.Fail()
 				}
-				if err := p.createPerson(person); err != nil {
+				if _, err := p.createPerson(person); err != nil {
 					t.Error(err)
 					t.Fail()
 				}
@@ -389,6 +389,69 @@ func TestPersonDelete(t *testing.T) {
 				if strings.Compare(test.name, "Login User (Setup)") == 0 {
 					auth = test.out.Header().Get("Authorization")
 				}
+			}
+		})
+	}
+}
+
+func TestGetPersonType(t *testing.T) {
+	// Create user for setup purposes
+	person := models.Person{
+		Email:    string(randSeq(5) + "@test.com"),
+		Password: string(randSeq(15)),
+		Name:     string(randSeq(10)),
+		Type:     "Parent",
+	}
+
+	var userID string
+
+	testCases := []struct {
+		name          string
+		in            string
+		expectedError bool
+		expectType    string
+	}{
+		{
+			name:          "Good User",
+			in:            userID,
+			expectedError: false,
+			expectType:    person.Type,
+		},
+		{
+			name:          "Bad User",
+			in:            "abc123",
+			expectedError: true,
+			expectType:    "",
+		},
+	}
+
+	setup := PersonController{}
+	userID, err := setup.createPerson(person)
+	if err != nil {
+		t.Error("Unable to create setup user:", err)
+		t.Fail()
+	}
+
+	for _, test := range testCases {
+		p := PersonController{}
+		if strings.Contains(test.name, "Good User") {
+			test.in = userID
+		}
+		t.Run(test.name, func(t *testing.T) {
+			userType, err := p.getPersonType(test.in)
+			if err != nil {
+				if test.expectedError == false {
+					t.Error("Got error when we didn't expect one")
+					t.Fail()
+				}
+			} else if test.expectedError == true {
+				t.Error("Didn't get error when we expected one")
+				t.Fail()
+			}
+
+			if strings.Compare(test.expectType, userType) != 0 {
+				t.Error("Invalid user type:", userType)
+				t.Fail()
 			}
 		})
 	}
