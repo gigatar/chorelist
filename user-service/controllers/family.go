@@ -99,14 +99,15 @@ func (f *FamilyController) DeleteFamily(w http.ResponseWriter, r *http.Request) 
 	w.WriteHeader(http.StatusNoContent)
 }
 
-func (f *FamilyController) createFamily(family models.Family) error {
+func (f *FamilyController) createFamily(family models.Family) (string, error) {
 
 	if !family.Validate() {
-		return errors.New("Invalid input")
+		return "", errors.New("Invalid input")
 	}
 
-	if err := f.dao.CreateFamily(family); err != nil {
-		return err
+	id, err := f.dao.CreateFamily(family)
+	if err != nil {
+		return "", err
 	}
-	return nil
+	return id, nil
 }

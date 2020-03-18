@@ -4,6 +4,8 @@ import (
 	"chorelist/user-service/database"
 	"chorelist/user-service/models"
 	"context"
+	"encoding/json"
+	"strings"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -13,19 +15,25 @@ import (
 type FamilyDAO struct{}
 
 // CreateFamily in database.
-func (f *FamilyDAO) CreateFamily(family models.Family) error {
+func (f *FamilyDAO) CreateFamily(family models.Family) (string, error) {
 
 	collection := database.DB.GetFamilyCollection()
 
 	ctx, cancel := context.WithTimeout(context.Background(), database.DB.Timeout)
 	defer cancel()
 
-	_, err := collection.InsertOne(ctx, family)
+	resource, err := collection.InsertOne(ctx, family)
 	if err != nil {
-		return err
+		return "", err
 	}
 
-	return nil
+	js, err := json.Marshal(resource.InsertedID)
+	if err != nil {
+		return "", err
+	}
+	// Strip quotes from string
+	ret := strings.Replace(string(js), "\"", "", -1)
+	return ret, nil
 }
 
 // DeleteFamily from database

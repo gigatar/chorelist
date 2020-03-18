@@ -239,21 +239,21 @@ func (p *PersonController) getPersonType(personID string) (string, error) {
 }
 
 // createPerson based on input.
-func (p *PersonController) createPerson(person models.Person) error {
+func (p *PersonController) createPerson(person models.Person) (string, error) {
 	if !person.Validate() {
-		return errors.New("Invalid input")
+		return "", errors.New("Invalid input")
 	}
 
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(person.Password), bcryptPasswordCost)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	person.Password = string(hashedPassword)
-	_, err = p.dao.CreatePerson(person)
+	id, err := p.dao.CreatePerson(person)
 	if err != nil {
-		return err
+		return "", err
 	}
 
-	return nil
+	return id, nil
 }
