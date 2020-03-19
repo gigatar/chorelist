@@ -234,3 +234,25 @@ func (p *PersonDAO) UpdateLastLogin(userID string, loginTime int64) error {
 
 	return nil
 }
+
+// ViewPerson returns a person object from the database.
+func (p *PersonDAO) ViewPerson(userID, familyID string) (models.Person, error) {
+	var person models.Person
+
+	uid, err := primitive.ObjectIDFromHex(userID)
+	if err != nil {
+		return person, err
+	}
+
+	collection := database.DB.GetPersonCollection()
+
+	ctx, cancel := context.WithTimeout(context.Background(), database.DB.Timeout)
+	defer cancel()
+
+	err = collection.FindOne(ctx, bson.M{"_id": uid, "familyID": familyID}).Decode(&person)
+	if err != nil {
+		return person, err
+	}
+
+	return person, nil
+}

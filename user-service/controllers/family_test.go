@@ -360,7 +360,7 @@ func TestRemoveFamilyMember(t *testing.T) {
 				}
 				if strings.Compare(test.name, "Add Child to Family") == 0 {
 					f.AddFamilyMember(test.out, test.in)
-					childURI = strings.TrimPrefix(test.out.Header().Get("Location"), "/rest/v1/users/")
+					childURI = test.out.Header().Get("Location")
 				} else {
 					test.in.RequestURI += childURI
 					test.in.URL.Path += childURI

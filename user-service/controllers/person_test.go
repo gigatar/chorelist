@@ -14,6 +14,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/gorilla/mux"
 )
 
 func init() {
@@ -520,6 +522,108 @@ func TestGetPersonType(t *testing.T) {
 			if strings.Compare(test.expectType, userType) != 0 {
 				t.Error("Invalid user type:", userType)
 				t.Fail()
+			}
+		})
+	}
+}
+
+func TestViewPerson(t *testing.T) {
+	child := models.Person{
+		Email:    string(randSeq(5) + "@test.com"),
+		Password: string(randSeq(15)),
+		Name:     string(randSeq(10)),
+		Type:     "Child",
+	}
+
+	// Setup
+	auth, err := createUserAndLogin()
+	if err != nil {
+		t.Error(err)
+		t.FailNow()
+	}
+
+	var childAuth string
+	var childURI string
+
+	testCases := []struct {
+		name           string
+		in             *http.Request
+		out            *httptest.ResponseRecorder
+		expectedStatus int
+	}{
+		{
+			name:           "Add Child to Family",
+			in:             httptest.NewRequest("POST", "/rest/v1/families/add", createReader(child)),
+			out:            httptest.NewRecorder(),
+			expectedStatus: http.StatusNoContent,
+		},
+		{
+			name:           "View Person as parent",
+			in:             httptest.NewRequest("GET", "/rest/v1/users/", nil),
+			out:            httptest.NewRecorder(),
+			expectedStatus: http.StatusOK,
+		},
+		{
+			name:           "Login as child",
+			in:             httptest.NewRequest("POST", "/rest/v1/users/login", createReader(child)),
+			out:            httptest.NewRecorder(),
+			expectedStatus: http.StatusOK,
+		},
+		{
+			name:           "View Person as child",
+			in:             httptest.NewRequest("GET", "/rest/v1/users/", nil),
+			out:            httptest.NewRecorder(),
+			expectedStatus: http.StatusOK,
+		},
+	}
+
+	for _, test := range testCases {
+		var p PersonController
+		t.Run(test.name, func(t *testing.T) {
+			if strings.Compare(test.name, "Login as child") == 0 {
+				p.Login(test.out, test.in)
+				if test.out.Code != test.expectedStatus {
+					t.Error("Invalid response code:", test.out.Code)
+					t.Fail()
+				}
+
+				childAuth = test.out.Header().Get("Authorization")
+
+			} else {
+				if strings.Compare(test.name, "View Person as child") == 0 {
+					test.in.Header.Add("Authorization", "Bearer "+childAuth)
+				} else {
+					test.in.Header.Add("Authorization", "Bearer "+auth)
+				}
+				if strings.Compare(test.name, "Add Child to Family") == 0 {
+					var f FamilyController
+					f.AddFamilyMember(test.out, test.in)
+					childURI = test.out.Header().Get("Location")
+					if test.out.Code != test.expectedStatus {
+						t.Error("Invalid response code:", test.out.Code)
+					}
+				} else {
+					test.in.RequestURI += childURI
+					test.in.URL.Path += childURI
+
+					r := mux.NewRouter()
+					r.HandleFunc("/rest/v1/users/{personID}", p.ViewPerson).Methods("GET")
+					r.ServeHTTP(test.out, test.in)
+					if test.out.Code != test.expectedStatus {
+						t.Error("Invalid response code:", test.out.Code)
+						t.FailNow()
+					}
+					var responsePerson models.Person
+					err := json.NewDecoder(test.out.Body).Decode(&responsePerson)
+					if err != nil {
+						t.Error("Unable to unmarshal")
+						t.Fail()
+					}
+					if len(responsePerson.Password) > 0 || len(responsePerson.OldPassword) > 0 {
+						t.Error("Got password in response")
+						t.Fail()
+					}
+				}
 			}
 		})
 	}

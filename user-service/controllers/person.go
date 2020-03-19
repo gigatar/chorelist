@@ -10,6 +10,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/gorilla/mux"
+
 	"github.com/gigatar/chorelist/token"
 
 	"golang.org/x/crypto/bcrypt"
@@ -265,4 +267,53 @@ func (p *PersonController) createPerson(person models.Person) (string, error) {
 	}
 
 	return id, nil
+}
+
+// ViewPerson returns the person object minus password fields.
+func (p *PersonController) ViewPerson(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	personID := mux.Vars(r)["personID"]
+	if len(personID) == 0 {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	// Get familyID so we only deal with our family.
+	var jwt token.JWTToken
+	familyID, err := jwt.GetFamily(r.Header.Get("authorization"))
+	if err != nil {
+		if strings.Contains(err.Error(), "Invalid token") {
+			w.WriteHeader(http.StatusUnauthorized)
+		} else {
+			log.Println(err)
+			w.WriteHeader(http.StatusUnauthorized)
+		}
+		return
+	}
+
+	if familyID == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	// GetPerson object from database.
+	person, err := p.dao.ViewPerson(personID, familyID)
+	if err != nil {
+		if strings.Contains(err.Error(), "no documents") {
+			log.Println(err)
+			w.WriteHeader(http.StatusBadRequest)
+
+		} else {
+			log.Println(err)
+			w.WriteHeader(http.StatusInternalServerError)
+		}
+		return
+	}
+
+	// strip sensitive items from person object.
+	person.StripSensitive()
+
+	json.NewEncoder(w).Encode(person)
+	w.WriteHeader(http.StatusOK)
 }
