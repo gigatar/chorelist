@@ -1,0 +1,4 @@
+# Ignore node_modules to speed up build.
+# We will run npm install anyway.
+
+webfiles/chorelist/node_modules/*
