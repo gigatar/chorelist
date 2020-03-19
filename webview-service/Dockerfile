@@ -4,18 +4,25 @@ RUN apk update && apk add --no-cache git nodejs npm
 
 WORKDIR /app
 
-ADD . /app
+COPY . /app
 
-# Pass in prebuilt modules.  If not using them, uncomment next line to have go build them.
-# RUN go mod vendor
+# If vendor isn't there run the command.
+RUN if [ ! -d vendor ]; \
+    then echo "Need to build"; go mod vendor; \
+    fi
+
+
+
 RUN go build -ldflags "-s -w" -mod=vendor -o web .
 
 WORKDIR /app/webfiles/chorelist
 
+RUN if [ ! -d "dist" ]; then \
 # TODO: Look into why node-sass requires a rebuild...
-RUN npm install
-RUN npm rebuild node-sass
-RUN npm run build
+    npm install \
+    npm rebuild node-sass \
+    npm run build; \
+    fi
 
 FROM alpine:3.11
 WORKDIR /app

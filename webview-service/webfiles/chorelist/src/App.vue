@@ -1,13 +1,20 @@
 <template>
   <div id="app">
-    <div id="nav">
-      <router-link to="/">Home</router-link> |
-      <router-link to="/about">About</router-link>
-    </div>
-    <router-view />
+    <vue-headful :title="title" />
+    <router-view :key="$route.fullpath" />
   </div>
 </template>
 
+<script>
+export default {
+  computed: {
+    // Set the title based on the route name.
+    title: function() {
+      return "ChoreList [" + this.$route.name + "]";
+    }
+  }
+};
+</script>
 <style lang="scss">
 #app {
   font-family: Avenir, Helvetica, Arial, sans-serif;
