@@ -1,5 +1,6 @@
 import Vue from "vue";
 import VueRouter from "vue-router";
+import store from "@/store/index.js";
 
 Vue.use(VueRouter);
 
@@ -23,6 +24,16 @@ const routes = [
     path: "/signup/confirm",
     name: "SignupConfirm",
     component: () => import("@/views/SignupConfirm")
+  },
+  {
+    path: "/dashboard",
+    name: "Dashboard",
+    component: () => import("@/views/Dashboard"),
+    beforeEnter: requireAuth
+  },
+  {
+    path: "*",
+    redirect: "/"
   }
   // {
   //   path: "/about",
@@ -40,3 +51,23 @@ const router = new VueRouter({
 });
 
 export default router;
+
+/**
+ * Middleware for route authentication requirements.
+ *
+ * @param {string} to
+ * @param {string} from
+ * @param {string} next
+ */
+function requireAuth(to, from, next) {
+  store.dispatch("fetchToken");
+  if (!store.state.user.accessToken && to.fullPath !== "/") {
+    next("/");
+  } else {
+    if (to.path === "/" && store.state.user.accessToken) {
+      next("/tasks");
+    } else {
+      next();
+    }
+  }
+}
