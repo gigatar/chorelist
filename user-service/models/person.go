@@ -68,3 +68,9 @@ func (p Person) ValidateName() bool {
 	}
 	return true
 }
+
+// StripSensitive removes all sensitive variables from Person.
+func (p *Person) StripSensitive() {
+	p.Password = ""
+	p.OldPassword = ""
+}
