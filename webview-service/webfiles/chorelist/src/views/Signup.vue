@@ -111,7 +111,7 @@ export default {
     signupEnabled() {
       if (
         this.signupRequest.person.email &&
-        this.signupRequest.person.password &&
+        this.signupRequest.person.password.length >= 8 &&
         this.signupRequest.person.name &&
         this.signupRequest.family.name
       ) {
