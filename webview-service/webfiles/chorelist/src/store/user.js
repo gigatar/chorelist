@@ -20,6 +20,10 @@ export default {
       return state.accessTokenTTL;
     },
     getTokenValid(state) {
+      if (!state.accessToken){
+        return false;
+      }
+      
       // Check the token validity before replying.
       var currentTime = Math.round(new Date().getTime() / 1000);
       if (currentTime < state.accessTokenExpiration) {

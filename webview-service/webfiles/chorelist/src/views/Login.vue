@@ -88,11 +88,10 @@ export default {
       this.loginDisabled = true;
       this.alert.show = false;
 
-      console.log(JSON.stringify(this.loginData));
       this.$store
         .dispatch("login", this.loginData)
         .then(() => {
-          //   this.$router.push("/chores");
+          this.$router.push("/dashboard");
         })
         .catch(error => {
           if (error.status === 400) {

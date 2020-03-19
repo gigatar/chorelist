@@ -78,8 +78,13 @@ func (p *PersonController) Login(w http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 	}
 
+	// Sanitize person object
+	person.StripSensitive()
+
 	w.Header().Set("Authorization", tokenString)
 	w.WriteHeader(http.StatusOK)
+
+	json.NewEncoder(w).Encode(person)
 }
 
 // ChangeName allows a person to change their name.
