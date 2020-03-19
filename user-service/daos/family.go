@@ -102,3 +102,22 @@ func (f *FamilyDAO) UpdateFamilyMember(family models.Family) error {
 
 	return nil
 }
+
+// ChangeName updates the family name
+func (f *FamilyDAO) ChangeName(familyID, newName string) error {
+	id, err := primitive.ObjectIDFromHex(familyID)
+	if err != nil {
+		return err
+	}
+	collection := database.DB.GetFamilyCollection()
+
+	ctx, cancel := context.WithTimeout(context.Background(), database.DB.Timeout)
+	defer cancel()
+
+	_, err = collection.UpdateOne(ctx, bson.M{"_id": id}, bson.M{"$set": bson.M{"name": newName}})
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
