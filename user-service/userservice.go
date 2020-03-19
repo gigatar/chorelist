@@ -52,6 +52,7 @@ func main() {
 
 	familyEndpoint.HandleFunc("", jwt.ValidateMiddleware(family.ViewFamily)).Methods("GET")
 	familyEndpoint.HandleFunc("", jwt.ValidateMiddleware(family.DeleteFamily)).Methods("DELETE")
+	familyEndpoint.HandleFunc("/name", jwt.ValidateMiddleware(family.ChangeName)).Methods("PATCH")
 	familyEndpoint.HandleFunc("/persons/add", jwt.ValidateMiddleware(family.AddFamilyMember)).Methods("POST")
 	familyEndpoint.HandleFunc("/persons/{personID}", jwt.ValidateMiddleware(family.RemoveFamilyMember)).Methods("DELETE")
 
