@@ -34,11 +34,11 @@ func (j *JWTToken) CreateJWT(remoteHost, userID, familyID string) (string, error
 	}
 
 	// Expire
-	expire := time.Now().Add(time.Duration(time.Minute) * tokenDuration).Unix()
+	expire := time.Now().Add(time.Duration(time.Second) * tokenDuration).Unix()
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, CustomClaims{
 		userID,
 		familyID,
-		tokenDuration * 60,
+		tokenDuration,
 		jwt.StandardClaims{
 			ExpiresAt: expire,
 			Audience:  serverIP,
