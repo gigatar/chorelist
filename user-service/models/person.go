@@ -7,6 +7,7 @@ import (
 
 // Person data structure.
 // Note: Type is essentially a string enum
+// 		 LastLogin is unix time.
 type Person struct {
 	ID          string `json:"id,omitempty" bson:"_id,omitempty" example:""`
 	Name        string `json:"name" bson:"name" example:"John Doe"`
@@ -15,6 +16,7 @@ type Person struct {
 	Password    string `json:"password,omitempty" bson:"password" example:"ABC123"`
 	OldPassword string `json:"oldPassword,omitempty" bson:"oldPassword,omitempty" example:"ABC123"`
 	FamilyID    string `json:"familyID,omitempty" bson:"familyID,omitempty" example:""`
+	LastLogin   int64  `json:"lastLogin,omitempty" bson:"lastLogin,omitempty" example:"1584588677"`
 }
 
 // Validate input data for Person.

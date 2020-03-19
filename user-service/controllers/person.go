@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/gigatar/chorelist/token"
 
@@ -70,7 +71,13 @@ func (p *PersonController) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Add login - we don't care about errors here other than printing to log.
+	if err := p.dao.UpdateLastLogin(person.ID, time.Now().Unix()); err != nil {
+		log.Println(err)
+	}
+
 	w.Header().Set("Authorization", tokenString)
+	w.WriteHeader(http.StatusOK)
 }
 
 // ChangeName allows a person to change their name.
