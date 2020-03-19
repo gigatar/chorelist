@@ -48,11 +48,7 @@ func (p *PersonDAO) Login(email string) (models.Person, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), database.DB.Timeout)
 	defer cancel()
 
-	// We'll keep the id and pass it back to the user.
-	findOptions := options.FindOne()
-	findOptions.SetProjection(bson.M{"email": 0})
-
-	err := collection.FindOne(ctx, bson.M{"email": email}, findOptions).Decode(&person)
+	err := collection.FindOne(ctx, bson.M{"email": email}).Decode(&person)
 	if err != nil {
 		return person, err
 	}
