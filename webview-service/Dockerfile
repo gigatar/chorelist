@@ -10,14 +10,16 @@ ADD . /app
 # RUN go mod vendor
 RUN go build -ldflags "-s -w" -mod=vendor -o web .
 
-# WORKDIR /app/webfiles/chorelist
+WORKDIR /app/webfiles/chorelist
 
-# RUN npm install
-# RUN npm run build
+# TODO: Look into why node-sass requires a rebuild...
+RUN npm install
+RUN npm rebuild node-sass
+RUN npm run build
 
 FROM alpine:3.11
 WORKDIR /app
 COPY --from=builder /app/web /app
-# COPY --from=builder /app/webfiles/chorelist/dist/ /app/webfiles
+COPY --from=builder /app/webfiles/chorelist/dist/ /app/webfiles
 
 CMD ["/app/web"]
