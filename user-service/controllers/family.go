@@ -325,3 +325,37 @@ func (f *FamilyController) RemoveFamilyMember(w http.ResponseWriter, r *http.Req
 
 	w.WriteHeader(http.StatusNoContent)
 }
+
+// ViewFamily returns the family object.
+func (f *FamilyController) ViewFamily(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	// Get familyID to ensure we can only view our family.
+	var jwt token.JWTToken
+	familyID, err := jwt.GetFamily(r.Header.Get("authorization"))
+	if err != nil {
+		if strings.Contains(err.Error(), "Invalid token") {
+			w.WriteHeader(http.StatusUnauthorized)
+		} else {
+			log.Println(err)
+			w.WriteHeader(http.StatusUnauthorized)
+		}
+		return
+	}
+
+	if familyID == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	family, err := f.dao.GetFamily(familyID)
+	if err != nil {
+		log.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	json.NewEncoder(w).Encode(family)
+	w.WriteHeader(http.StatusOK)
+
+}
