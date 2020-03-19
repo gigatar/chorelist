@@ -1,2 +1,27 @@
 @import "node_modules/bootstrap/scss/bootstrap";
 @import "node_modules/bootstrap-vue/src/index.scss";
+
+/* Branding
+*/
+
+.bg-primary {
+    background-color: #41b783 !important;
+    border-color: #333;
+  }
+  .bg-inverse{
+    background-color: #fff;
+  }
+  
+  .btn-primary {
+    background-color: #41b783 !important;
+    border-color: #333;
+  }
+  
+  .text-primary {
+    color: #41b783 !important;
+  }
+  
+  /* text-primary-busy is used to simulate the table busy text */
+  .text-primary-busy {
+    color: rgba($color: #41b783, $alpha: 0.5);
+  }
