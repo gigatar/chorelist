@@ -41,7 +41,7 @@ func (f *FamilyController) DeleteFamily(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	// Get userID to ensure we can only modify ourselves
+	// Get userID to ensure we are a parent.
 	userID, err := jwt.GetUser(r.Header.Get("authorization"))
 	if err != nil {
 		if strings.Contains(err.Error(), "Invalid token") {
@@ -68,7 +68,7 @@ func (f *FamilyController) DeleteFamily(w http.ResponseWriter, r *http.Request) 
 	}
 
 	if strings.Compare(strings.ToLower(userType), "parent") != 0 {
-		w.WriteHeader(http.StatusBadRequest)
+		w.WriteHeader(http.StatusForbidden)
 		return
 	}
 
@@ -82,14 +82,15 @@ func (f *FamilyController) DeleteFamily(w http.ResponseWriter, r *http.Request) 
 
 	// Delete all family persons.
 	for _, person := range family.Person {
-		strippedPerson := person[len(userID):] // Strip HATEOAS location off front.
-		err = p.dao.DeletePerson(strippedPerson)
+		err = p.dao.DeletePerson(person)
 		if err != nil {
 			log.Println(err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
 	}
+
+	// TODO: Delete chores
 
 	// Delete Family
 	err = f.dao.DeleteFamily(familyID)
