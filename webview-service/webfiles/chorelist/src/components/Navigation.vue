@@ -18,16 +18,21 @@
             <!-- Add avatar here and no-caret to dropdown -->
             {{ userName }}
           </template>
-          <b-dropdown-item href="#">Profile</b-dropdown-item>
+          <b-dropdown-item @click="userModal">Profile</b-dropdown-item>
           <b-dropdown-item @click="logout">Logout</b-dropdown-item>
         </b-nav-item-dropdown>
       </b-navbar-nav>
     </b-collapse>
+    <UserModal ref="child"></UserModal>
   </b-navbar>
 </template>
 <script>
+import UserModal from "@/components/UserModal";
 export default {
   name: "Navigation",
+  components: {
+    UserModal
+  },
   beforeMount() {
     this.checkLogin();
   },
@@ -67,6 +72,12 @@ export default {
      */
     logout() {
       this.$store.dispatch("logout");
+    },
+    /**
+     * Launch the user profile modal.
+     */
+    userModal() {
+      this.$refs.child.createModal();
     }
   }
 };
