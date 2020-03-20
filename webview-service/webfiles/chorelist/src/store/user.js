@@ -3,8 +3,9 @@ import router from "@/router";
 
 export default {
   state: {
-    email: null,
-    userName: null,
+    email: sessionStorage.getItem("email") || "",
+    userName: sessionStorage.getItem("userName") || "",
+    userType: sessionStorage.getItem("userType") || "",
     accessToken: null,
     accessTokenExpiration: 0,
     accessTokenTTL: 0
@@ -25,16 +26,13 @@ export default {
       }
       return true;
     },
+    getUserType(state) {
+      return state.userType.toLowerCase() || null;
+    },
     getEmail(state) {
-      if (state.email === null) {
-        state.email = sessionStorage.getItem("email");
-      }
       return state.email;
     },
     getUserName(state) {
-      if (state.userName === null) {
-        state.userName = sessionStorage.getItem("userName");
-      }
       return state.userName;
     }
   },
@@ -70,6 +68,12 @@ export default {
     },
     setUserName: (state, userName) => {
       state.userName = userName;
+    },
+    remoteUserType: state => {
+      state.userType = null;
+    },
+    setUserType: (state, userType) => {
+      state.userType = userType;
     }
   },
   actions: {
@@ -107,9 +111,11 @@ export default {
               sessionStorage.setItem("accessToken", headers.authorization);
               sessionStorage.setItem("email", data.email);
               sessionStorage.setItem("userName", data.name);
+              sessionStorage.setItem("userType", data.type);
               context.commit("updateAccessToken", headers.authorization);
               context.commit("setUserName", data.name);
               context.commit("setEmail", data.email);
+              context.commit("setUserType", data.type);
               resolve(true);
             }
           })

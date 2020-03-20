@@ -12,7 +12,7 @@
             class="mb-3"
             label-size="lg"
             label="Family Name"
-            :disabled="modifyFamilyName"
+            :disabled="modifyFamilyName || userType !== 'parent'"
           >
             <b-input-group size="md">
               <b-input-group-prepend is-text>
@@ -32,6 +32,7 @@
                 class="ml-2"
                 variant="primary"
                 @click="updateFamilyName"
+                v-if="userType === 'parent'"
                 >Update Name</b-button
               >
             </b-input-group>
@@ -47,13 +48,20 @@
           :items="familyMembers"
           :fields="familyFields"
           :busy="loadingFamily"
+          sort-by="type"
+          sort-desc="desc"
         >
           <div slot="table-busy" class="text-center text-primary my-2">
             <b-spinner type="grow" class="align-middle"></b-spinner>
             <strong>Loading Family...</strong>
           </div></b-table
         >
-        <b-button variant="primary" block @click="addFamilyMember()"
+
+        <b-button
+          variant="primary"
+          block
+          @click="addFamilyMember()"
+          v-if="userType === 'parent'"
           >Add Family Member</b-button
         >
       </b-col></b-row
@@ -71,6 +79,11 @@ export default {
   components: {
     Navigation,
     AddFamilyMember
+  },
+  computed: {
+    userType() {
+      return this.$store.getters.getUserType;
+    }
   },
   data: () => ({
     alert: { show: false, variant: "danger", text: "" },
@@ -137,7 +150,7 @@ export default {
               this.alert.text = "Unauthorized";
               break;
             default:
-              this.alert.text = "An unknown error occured";
+              this.alert.text = "An unknown error occured " + error;
           }
           this.alert.show = true;
         })
