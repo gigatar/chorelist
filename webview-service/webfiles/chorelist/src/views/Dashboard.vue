@@ -1,6 +1,6 @@
 <template>
   <b-container fluid>
-    <Navigation/>
+    <Navigation />
     Welcome to the secure area {{ name }}
   </b-container>
 </template>
