@@ -1,16 +1,16 @@
 <template>
-  <b-container>
-    <SecureArea />
+  <b-container fluid>
+    <Navigation/>
     Welcome to the secure area {{ name }}
   </b-container>
 </template>
 
 <script>
-import SecureArea from "@/components/SecureArea";
+import Navigation from "@/components/Navigation";
 export default {
   name: "Dashboard",
   components: {
-    SecureArea
+    Navigation
   },
   computed: {
     name() {

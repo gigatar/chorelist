@@ -20,17 +20,10 @@ export default {
       return state.accessTokenTTL;
     },
     getTokenValid(state) {
-      if (!state.accessToken){
+      if (!state.accessToken) {
         return false;
       }
-      
-      // Check the token validity before replying.
-      var currentTime = Math.round(new Date().getTime() / 1000);
-      if (currentTime < state.accessTokenExpiration) {
-        return true;
-      }
-
-      return false;
+      return true;
     },
     getEmail(state) {
       if (state.email === null) {
@@ -55,8 +48,13 @@ export default {
 
       // Get expiration time from token
       var exipration = JSON.parse(window.atob(state.accessToken.split(".")[1]));
-      state.accessTokenExpiration = exipration.Claims.exp;
       state.accessTokenTTL = exipration.TTL;
+
+      // Check the token validity before replying.
+      var currentTime = Math.round(new Date().getTime() / 1000);
+      if (currentTime > exipration.Claims.exp) {
+        state.accessToken = null;
+      }
     },
     removeAccessToken: state => {
       state.accessToken = null;

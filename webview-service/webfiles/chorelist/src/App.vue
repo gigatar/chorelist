@@ -1,8 +1,8 @@
 <template>
-  <div id="app">
+  <b-container fluid id="app">
     <vue-headful :title="title" />
     <router-view :key="$route.fullpath" />
-  </div>
+  </b-container>
 </template>
 
 <script>
