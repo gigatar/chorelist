@@ -134,6 +134,42 @@ export default {
       context.commit("removeDisplayName");
 
       router.go("/");
+    },
+
+    changeUserName(context, newName) {
+      return new Promise((resolve, reject) => {
+        axios
+          .patch("rest/v1/users/changename", newName, {
+            headers: {
+              Authorization: "Bearer " + context.getters.getAuthToken
+            }
+          })
+          .then(({ status }) => {
+            sessionStorage.setItem("userName", newName.name);
+            context.commit("setUserName", newName.name);
+            resolve(status);
+          })
+          .catch(function(error) {
+            reject(error.response);
+          });
+      });
+    },
+
+    changePassword(context, passwordChange) {
+      return new Promise((resolve, reject) => {
+        axios
+          .patch("/rest/v1/users/changepassword", passwordChange, {
+            headers: {
+              Authorization: "Bearer " + context.getters.getAuthToken
+            }
+          })
+          .then(({ status }) => {
+            resolve(status);
+          })
+          .catch(function(error) {
+            reject(error.response);
+          });
+      });
     }
   }
 };
