@@ -1,8 +1,15 @@
 @import "node_modules/bootstrap/scss/bootstrap";
 @import "node_modules/bootstrap-vue/src/index.scss";
 
-/* Branding
-*/
+*{
+  margin: 0px;
+  padding: 0px;
+  box-sizing: border-box;
+}
+
+/* 
+ * Branding
+ */
 
 .bg-primary {
     background-color: #41b783 !important;
