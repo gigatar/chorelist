@@ -58,16 +58,19 @@
         >
       </b-col></b-row
     >
+    <AddFamilyMember ref="child"></AddFamilyMember>
   </b-container>
 </template>
 
 <script>
 import Navigation from "@/components/Navigation";
+import AddFamilyMember from "@/components/AddFamilyMemberModal";
 import { unixtTimeToLocal } from "@/helpers/helpers.js";
 export default {
   name: "Family",
   components: {
-    Navigation
+    Navigation,
+    AddFamilyMember
   },
   data: () => ({
     alert: { show: false, variant: "danger", text: "" },
@@ -86,6 +89,8 @@ export default {
   },
   methods: {
     getFamily() {
+      this.familyName = { name: null };
+      this.familyMembers = [];
       this.$store
         .dispatch("getFamily")
         .then(success => {
@@ -97,11 +102,25 @@ export default {
                 this.familyMembers.push({
                   name: response.name,
                   type: response.type,
-                  lastLogin: unixtTimeToLocal(response.lastLogin)
+                  lastLogin: unixtTimeToLocal(response.lastLogin) || "Never"
                 });
               })
               .catch(error => {
-                console.log(error);
+                this.alert = {
+                  variant: "danger",
+                  text: ""
+                };
+                switch (error.status) {
+                  case 400:
+                    this.alert.text = "Invalid Family ID";
+                    break;
+                  case 401:
+                    this.alert.text = "Unauthorized";
+                    break;
+                  default:
+                    this.alert.text = "An unknown error occured";
+                }
+                this.alert.show = true;
               });
           }
         })
@@ -118,7 +137,7 @@ export default {
               this.alert.text = "Unauthorized";
               break;
             default:
-              this.alert.text = "An unknown error occured" + error;
+              this.alert.text = "An unknown error occured";
           }
           this.alert.show = true;
         })
@@ -127,7 +146,7 @@ export default {
         });
     },
     addFamilyMember() {
-      alert("We'll create a modal");
+      this.$refs.child.createModal();
     },
     updateFamilyName() {
       this.modifyFamilyName = true;
@@ -153,7 +172,7 @@ export default {
                 "Do your parents know you're trying to change the name?";
               break;
             default:
-              this.alert.text = "An unknown error occured " + error;
+              this.alert.text = "An unknown error occured";
           }
           this.alert.show = true;
         })
@@ -179,10 +198,9 @@ export default {
                 this.alert.text = "Unauthorized";
                 break;
               default:
-                this.alert.text = "An unknown error occured " + error;
+                this.alert.text = "An unknown error occured";
             }
             this.alert.show = true;
-
             reject();
           });
       });
