@@ -13,10 +13,9 @@
 
       <!-- Right aligned -->
       <b-navbar-nav class="ml-auto">
-        <b-nav-item-dropdown right block>
+        <b-nav-item-dropdown right no-caret block>
           <template slot="button-content">
-            <!-- Add avatar here and no-caret to dropdown -->
-            {{ userName }}
+            <Avatar :fullname="userName" :size="28" />
           </template>
           <b-dropdown-item @click="userModal">Profile</b-dropdown-item>
           <b-dropdown-item @click="logout">Logout</b-dropdown-item>
@@ -28,10 +27,12 @@
 </template>
 <script>
 import UserModal from "@/components/UserModal";
+import Avatar from "vue-avatar-component";
 export default {
   name: "Navigation",
   components: {
-    UserModal
+    UserModal,
+    Avatar
   },
   beforeMount() {
     this.checkLogin();
