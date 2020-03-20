@@ -8,14 +8,19 @@
     <b-row>
       <b-col xs="12"
         ><b-form>
-          <b-form-group class="mb-3" label-size="lg" label="Family Name">
+          <b-form-group
+            class="mb-3"
+            label-size="lg"
+            label="Family Name"
+            :disabled="modifyFamilyName"
+          >
             <b-input-group size="md">
               <b-input-group-prepend is-text>
                 <octicon name="organization"></octicon>
               </b-input-group-prepend>
               <b-form-input
                 id="display-input"
-                v-model="familyName"
+                v-model="familyName.name"
                 required
                 type="text"
                 placeholder="Enter Family Name"
@@ -67,8 +72,13 @@ export default {
   data: () => ({
     alert: { show: false, variant: "danger", text: "" },
     loadingFamily: true,
-    familyName: null,
-    familyFields: [{ key: "name", sortable: true }, { key: "type", sortable: true },{ key: "lastLogin", sortable: true }],
+    modifyFamilyName: false,
+    familyName: { name: null },
+    familyFields: [
+      { key: "name", sortable: true },
+      { key: "type", sortable: true },
+      { key: "lastLogin", sortable: true }
+    ],
     familyMembers: []
   }),
   beforeMount() {
@@ -79,7 +89,7 @@ export default {
       this.$store
         .dispatch("getFamily")
         .then(success => {
-          this.familyName = success.data.name;
+          this.familyName.name = success.data.name;
 
           for (let i = 0; i < success.data.person.length; i++) {
             this.getFamilyMember(success.data.person[i])
@@ -119,7 +129,36 @@ export default {
     addFamilyMember() {
       alert("We'll create a modal");
     },
-    updateFamilyName() {},
+    updateFamilyName() {
+      this.modifyFamilyName = true;
+      this.$store
+        .dispatch("changeFamilyName", this.familyName)
+        .then(() => {
+          this.alert = {
+            variant: "success",
+            text: "Successfully change family name",
+            show: true
+          };
+        })
+        .catch(error => {
+          switch (error.status) {
+            case 400:
+              this.alert.text = "Invalid Family Name";
+              break;
+            case 401:
+              this.alert.text = "Unauthorized";
+              break;
+            case 403:
+              this.alert.text =
+                "Do your parents know you're trying to change the name?";
+              break;
+            default:
+              this.alert.text = "An unknown error occured " + error;
+          }
+          this.alert.show = true;
+        })
+        .finally(() => (this.modifyFamilyName = false));
+    },
     getFamilyMember(userID) {
       return new Promise((resolve, reject) => {
         this.$store
