@@ -356,8 +356,8 @@ func (f *FamilyController) ViewFamily(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	json.NewEncoder(w).Encode(family)
 	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(family)
 }
 
 // ChangeName changes the name of a family.

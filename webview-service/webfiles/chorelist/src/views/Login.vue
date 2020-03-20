@@ -58,7 +58,7 @@ export default {
   data: () => ({
     loginDisabled: false,
     loginData: { email: null, password: null },
-    alert: { show: false, variant: "danger", text: "Test" }
+    alert: { show: false, variant: "danger", text: "" }
   }),
   beforeMount() {
     this.checkSignup();

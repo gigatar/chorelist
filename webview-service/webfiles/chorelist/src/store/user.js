@@ -139,7 +139,7 @@ export default {
     changeUserName(context, newName) {
       return new Promise((resolve, reject) => {
         axios
-          .patch("rest/v1/users/changename", newName, {
+          .patch("rest/v1/users/name", newName, {
             headers: {
               Authorization: "Bearer " + context.getters.getAuthToken
             }
@@ -158,13 +158,29 @@ export default {
     changePassword(context, passwordChange) {
       return new Promise((resolve, reject) => {
         axios
-          .patch("/rest/v1/users/changepassword", passwordChange, {
+          .patch("/rest/v1/users/password", passwordChange, {
             headers: {
               Authorization: "Bearer " + context.getters.getAuthToken
             }
           })
           .then(({ status }) => {
             resolve(status);
+          })
+          .catch(function(error) {
+            reject(error.response);
+          });
+      });
+    },
+    getUser(context, userID) {
+      return new Promise((resolve, reject) => {
+        axios
+          .get("/rest/v1/users/" + userID, {
+            headers: {
+              Authorization: "Bearer " + context.getters.getAuthToken
+            }
+          })
+          .then(({ data }) => {
+            resolve(data);
           })
           .catch(function(error) {
             reject(error.response);

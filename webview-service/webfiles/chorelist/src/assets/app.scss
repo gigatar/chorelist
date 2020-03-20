@@ -1,34 +1,43 @@
 @import "node_modules/bootstrap/scss/bootstrap";
 @import "node_modules/bootstrap-vue/src/index.scss";
 
-*{
+* {
   margin: 0px;
   padding: 0px;
   box-sizing: border-box;
 }
 
+.fix-navbar-whitespace {
+  margin-top: 65px;
+}
+
+.relative {
+  position: absolute;
+}
 /* 
  * Branding
  */
 
+$primary-color: #41b783;
+
 .bg-primary {
-    background-color: #41b783 !important;
-    border-color: #333;
-  }
-  .bg-inverse{
-    background-color: #fff;
-  }
-  
-  .btn-primary {
-    background-color: #41b783 !important;
-    border-color: #333;
-  }
-  
-  .text-primary {
-    color: #41b783 !important;
-  }
-  
-  /* text-primary-busy is used to simulate the table busy text */
-  .text-primary-busy {
-    color: rgba($color: #41b783, $alpha: 0.5);
-  }
+  background-color: $primary-color !important;
+  border-color: #333;
+}
+.bg-inverse {
+  background-color: #fff;
+}
+
+.btn-primary {
+  background-color: $primary-color !important;
+  border-color: #333;
+}
+
+.text-primary {
+  color: $primary-color !important;
+}
+
+/* text-primary-busy is used to simulate the table busy text */
+.text-primary-busy {
+  color: rgba($color: $primary-color, $alpha: 0.5);
+}
