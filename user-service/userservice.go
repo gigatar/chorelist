@@ -59,7 +59,7 @@ func main() {
 
 	// Configure CORS
 	allowedMethods := handlers.AllowedMethods([]string{
-		"GET", "POST", "PUT", "DELETE", "OPTIONS",
+		"GET", "POST", "PATCH", "DELETE", "OPTIONS",
 	})
 
 	// Accept everyone - probably should be the LB or something.
