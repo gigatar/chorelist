@@ -158,7 +158,7 @@ export default {
                 };
                 switch (error.status) {
                   case 400:
-                    this.alert.text = "Invalid Family ID";
+                    this.alert.text = "Invalid Family or Family Member ID";
                     break;
                   case 401:
                     this.alert.text = "Unauthorized";
@@ -235,22 +235,7 @@ export default {
             resolve(success);
           })
           .catch(error => {
-            this.alert = {
-              variant: "danger",
-              text: ""
-            };
-            switch (error.status) {
-              case 400:
-                this.alert.text = "Invalid User ID";
-                break;
-              case 401:
-                this.alert.text = "Unauthorized";
-                break;
-              default:
-                this.alert.text = "An unknown error occured";
-            }
-            this.alert.show = true;
-            reject();
+            reject(error);
           });
       });
     },
