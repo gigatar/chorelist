@@ -48,8 +48,8 @@ func main() {
 	// Authenticated endpoints
 	personEndpoint.HandleFunc("", jwt.ValidateMiddleware(person.DeletePerson)).Methods("DELETE")
 	personEndpoint.HandleFunc("/{personID}", jwt.ValidateMiddleware(person.ViewPerson)).Methods("GET")
-	personEndpoint.HandleFunc("/changename", jwt.ValidateMiddleware(person.ChangeName)).Methods("PATCH")
-	personEndpoint.HandleFunc("/changepassword", jwt.ValidateMiddleware(person.ChangePassword)).Methods("PATCH")
+	personEndpoint.HandleFunc("/name", jwt.ValidateMiddleware(person.ChangeName)).Methods("PATCH")
+	personEndpoint.HandleFunc("/password", jwt.ValidateMiddleware(person.ChangePassword)).Methods("PATCH")
 
 	familyEndpoint.HandleFunc("", jwt.ValidateMiddleware(family.ViewFamily)).Methods("GET")
 	familyEndpoint.HandleFunc("", jwt.ValidateMiddleware(family.DeleteFamily)).Methods("DELETE")

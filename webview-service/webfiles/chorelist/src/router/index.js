@@ -32,6 +32,12 @@ const routes = [
     beforeEnter: requireAuth
   },
   {
+    path: "/family",
+    name: "Family",
+    component: () => import("@/views/Family"),
+    beforeEnter: requireAuth
+  },
+  {
     path: "*",
     redirect: "/"
   }

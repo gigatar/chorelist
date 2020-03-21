@@ -17,7 +17,7 @@
                   id="email-input"
                   v-model="loginData.email"
                   required
-                  type="text"
+                  type="email"
                   placeholder="Enter Email Address"
                   autocomplete="email"
                 ></b-form-input>
@@ -58,7 +58,7 @@ export default {
   data: () => ({
     loginDisabled: false,
     loginData: { email: null, password: null },
-    alert: { show: false, variant: "danger", text: "Test" }
+    alert: { show: false, variant: "danger", text: "" }
   }),
   beforeMount() {
     this.checkSignup();

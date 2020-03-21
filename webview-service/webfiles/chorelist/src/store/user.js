@@ -3,8 +3,10 @@ import router from "@/router";
 
 export default {
   state: {
-    email: null,
-    userName: null,
+    email: sessionStorage.getItem("email") || "",
+    userName: sessionStorage.getItem("userName") || "",
+    userType: sessionStorage.getItem("userType") || "",
+    userID: sessionStorage.getItem("userID") || "",
     accessToken: null,
     accessTokenExpiration: 0,
     accessTokenTTL: 0
@@ -25,16 +27,16 @@ export default {
       }
       return true;
     },
+    getUserType(state) {
+      return state.userType.toLowerCase() || null;
+    },
     getEmail(state) {
-      if (state.email === null) {
-        state.email = sessionStorage.getItem("email");
-      }
       return state.email;
     },
+    getUserID(state) {
+      return state.userID;
+    },
     getUserName(state) {
-      if (state.userName === null) {
-        state.userName = sessionStorage.getItem("userName");
-      }
       return state.userName;
     }
   },
@@ -70,6 +72,18 @@ export default {
     },
     setUserName: (state, userName) => {
       state.userName = userName;
+    },
+    remoteUserType: state => {
+      state.userType = null;
+    },
+    setUserType: (state, userType) => {
+      state.userType = userType;
+    },
+    setUserID: (state, userID) => {
+      state.userID = userID;
+    },
+    removeUserID: state => {
+      state.userID = null;
     }
   },
   actions: {
@@ -107,9 +121,13 @@ export default {
               sessionStorage.setItem("accessToken", headers.authorization);
               sessionStorage.setItem("email", data.email);
               sessionStorage.setItem("userName", data.name);
+              sessionStorage.setItem("userID", data.id);
+              sessionStorage.setItem("userType", data.type);
               context.commit("updateAccessToken", headers.authorization);
               context.commit("setUserName", data.name);
               context.commit("setEmail", data.email);
+              context.commit("setUserID", data.id);
+              context.commit("setUserType", data.type);
               resolve(true);
             }
           })
@@ -128,10 +146,13 @@ export default {
     logout(context) {
       sessionStorage.removeItem("accessToken");
       sessionStorage.removeItem("email");
-      sessionStorage.removeItem("displayName");
+      sessionStorage.removeItem("userName");
+      sessionStorage.removeItem("userType");
       context.commit("removeAccessToken");
+      context.commit("removeUserName");
       context.commit("removeEmail");
-      context.commit("removeDisplayName");
+      context.commit("removeUserID");
+      context.commit("removeUserType");
 
       router.go("/");
     },
@@ -139,7 +160,7 @@ export default {
     changeUserName(context, newName) {
       return new Promise((resolve, reject) => {
         axios
-          .patch("rest/v1/users/changename", newName, {
+          .patch("rest/v1/users/name", newName, {
             headers: {
               Authorization: "Bearer " + context.getters.getAuthToken
             }
@@ -158,13 +179,29 @@ export default {
     changePassword(context, passwordChange) {
       return new Promise((resolve, reject) => {
         axios
-          .patch("/rest/v1/users/changepassword", passwordChange, {
+          .patch("/rest/v1/users/password", passwordChange, {
             headers: {
               Authorization: "Bearer " + context.getters.getAuthToken
             }
           })
           .then(({ status }) => {
             resolve(status);
+          })
+          .catch(function(error) {
+            reject(error.response);
+          });
+      });
+    },
+    getUser(context, userID) {
+      return new Promise((resolve, reject) => {
+        axios
+          .get("/rest/v1/users/" + userID, {
+            headers: {
+              Authorization: "Bearer " + context.getters.getAuthToken
+            }
+          })
+          .then(({ data }) => {
+            resolve(data);
           })
           .catch(function(error) {
             reject(error.response);

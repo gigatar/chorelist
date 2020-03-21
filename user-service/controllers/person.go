@@ -319,6 +319,6 @@ func (p *PersonController) ViewPerson(w http.ResponseWriter, r *http.Request) {
 	// strip sensitive items from person object.
 	person.StripSensitive()
 
-	json.NewEncoder(w).Encode(person)
 	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(person)
 }
