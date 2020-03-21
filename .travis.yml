@@ -3,14 +3,23 @@ go:
     - "1.12"
 env:
     - GO111MODULE=on
+
+services:
+    - mongodb
+
+addons:
+    hosts:
+        - mongodb
+
 before_install:
     - go get github.com/mattn/goveralls
 
 jobs:
     include:
-        - stage: Run Unit Tests
+        - stage: Unit Test User Service
           script:
-              - go test -race -covermode atomic -coverprofile=profile.cov ./...
+              - cd user-service
+              - go test -race -covermode atomic -coverprofile=profile.cov -v ./...
               - $GOPATH/bin/goveralls -coverprofile=profile.cov -service=travis-ci
         - stage: Build User Service
           script:
@@ -20,3 +29,4 @@ jobs:
           script:
               - cd webview-service
               - go build -ldflags "-s -w" -race
+
