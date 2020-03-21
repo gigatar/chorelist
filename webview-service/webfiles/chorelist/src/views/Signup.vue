@@ -19,7 +19,7 @@
                   required
                   type="text"
                   placeholder="Enter Family Name"
-                  autocomplete="nickname"
+                  autocomplete="family-name"
                   maxlength="128"
                 ></b-form-input>
               </b-input-group>

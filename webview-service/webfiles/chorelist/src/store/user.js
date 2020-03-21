@@ -132,7 +132,11 @@ export default {
             }
           })
           .catch(function(error) {
-            reject(error.response);
+            if (error.status) {
+              reject(error.response);
+            } else {
+              reject(500);
+            }
           });
       });
     },

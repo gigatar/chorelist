@@ -14,7 +14,7 @@ Vue.use(BootstrapVue);
 Vue.component("octicon", Octicon);
 Vue.component("vue-headful", vueHeadful);
 
-axios.defaults.baseURL = "https://tasktracker.gigatar.net";
+axios.defaults.baseURL = "https://chorelist.gigatar.net";
 
 Vue.config.productionTip = false;
 
