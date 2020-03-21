@@ -49,7 +49,7 @@
           :fields="familyFields"
           :busy="loadingFamily"
           sort-by="type"
-          sort-desc="desc"
+          sort-desc
         >
           <div slot="table-busy" class="text-center text-primary my-2">
             <b-spinner type="grow" class="align-middle"></b-spinner>
@@ -65,7 +65,17 @@
           >Add Family Member</b-button
         >
       </b-col></b-row
+    ><b-row class="mt-5"
+      ><b-col class="text-right">
+        <b-button
+          variant="danger"
+          v-if="userType === 'parent'"
+          @click="deleteFamily()"
+          >Delete Family</b-button
+        ></b-col
+      ></b-row
     >
+
     <AddFamilyMember ref="child"></AddFamilyMember>
   </b-container>
 </template>
@@ -217,6 +227,56 @@ export default {
             reject();
           });
       });
+    },
+    deleteFamily() {
+      this.$bvModal
+        .msgBoxConfirm(
+          "THIS IS A DESTRUCTIVE AND IRREVERSABLE ACTION.  CONTINUING WILL DELETE ALL PEOPLE AND CHORES ASSOCIATED WITH THIS FAMILY.",
+          {
+            title: "Please Confirm",
+            size: "lg",
+            buttonSize: "sm",
+            okVariant: "danger",
+            okTitle: "YES",
+            cancelTitle: "NO",
+            footerClass: "p-2",
+            hideHeaderClose: true,
+            noCloseOnBackdrop: true,
+            noCloseOnEsc: true
+          }
+        )
+        .then(value => {
+          // Even though we should only get bool bail if it's not explicitly true.
+          if (value !== true) {
+            return;
+          }
+
+          this.$store
+            .dispatch("deleteFamily")
+            .then(() => {
+              this.$store.dispatch("logout");
+            })
+            .catch(error => {
+              this.alert = {
+                variant: "danger",
+                text: ""
+              };
+              switch (error.status) {
+                case 400:
+                  this.alert.text = "Invalid Family or User ID";
+                  break;
+                case 401:
+                  this.alert.text = "Unauthorized";
+                  break;
+                case 403:
+                  this.alert.text = "HA! Nice try kid.";
+                  break;
+                default:
+                  this.alert.text = "An unknown error occured";
+              }
+              this.alert.show = true;
+            });
+        });
     }
   }
 };

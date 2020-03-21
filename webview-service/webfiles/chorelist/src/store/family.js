@@ -52,6 +52,22 @@ export default {
             reject(error.response);
           });
       });
+    },
+    deleteFamily(context) {
+      return new Promise((resolve, reject) => {
+        axios
+          .delete("/rest/v1/families", {
+            headers: {
+              Authorization: "Bearer " + context.getters.getAuthToken
+            }
+          })
+          .then(({ status }) => {
+            resolve(status);
+          })
+          .catch(function(error) {
+            reject(error.response);
+          });
+      });
     }
   }
 };
