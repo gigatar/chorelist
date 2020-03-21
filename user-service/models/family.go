@@ -25,3 +25,12 @@ func (f Family) ValidateName() bool {
 
 	return true
 }
+
+// ValidateAddPerson ensures that family size will not be too large.
+func (f Family) ValidateAddPerson() bool {
+	if len(f.Person) >= 15 {
+		return false
+	}
+
+	return true
+}

@@ -70,6 +70,7 @@
           block
           @click="addFamilyMember()"
           v-if="userType === 'parent'"
+          :disabled="maxFamilySize"
           >Add Family Member</b-button
         >
       </b-col>
@@ -110,6 +111,13 @@ export default {
     },
     currentUserID() {
       return this.$store.getters.getUserID;
+    },
+    maxFamilySize() {
+      if (this.familyMembers.length >= 15) {
+        return true;
+      }
+
+      return false;
     }
   },
   data: () => ({
