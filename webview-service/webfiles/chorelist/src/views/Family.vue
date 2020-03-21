@@ -41,7 +41,7 @@
       ></b-row
     >
     <b-row
-      ><b-col>
+      ><b-col v-if="!loadingFamily">
         <b-table
           striped
           hover
@@ -72,8 +72,14 @@
           v-if="userType === 'parent'"
           >Add Family Member</b-button
         >
+      </b-col>
+      <b-col v-if="loadingFamily">
+        <div class="text-center text-primary my-2">
+          <b-spinner type="grow" class="align-middle"></b-spinner>
+          <strong>Loading Family...</strong>
+        </div>
       </b-col></b-row
-    ><b-row class="mt-5"
+    ><b-row class="mt-5" v-if="!loadingFamily"
       ><b-col class="text-right">
         <b-button
           variant="danger"
@@ -127,12 +133,14 @@ export default {
       this.loadingFamily = true;
       this.familyName = { name: null };
       this.familyMembers = [];
+      let refCount = 0;
       this.$store
         .dispatch("getFamily")
         .then(success => {
           this.familyName.name = success.data.name;
 
           for (let i = 0; i < success.data.person.length; i++) {
+            refCount++;
             this.getFamilyMember(success.data.person[i])
               .then(response => {
                 this.familyMembers.push({
@@ -159,6 +167,12 @@ export default {
                     this.alert.text = "An unknown error occured";
                 }
                 this.alert.show = true;
+              })
+              .finally(() => {
+                refCount--;
+                if (refCount === 0) {
+                  this.loadingFamily = false;
+                }
               });
           }
         })
@@ -178,10 +192,6 @@ export default {
               this.alert.text = "An unknown error occured " + error;
           }
           this.alert.show = true;
-        })
-        .finally(() => {
-          // Smooth it over.
-          setTimeout(() => (this.loadingFamily = false), 300);
         });
     },
     addFamilyMember() {
