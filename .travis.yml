@@ -3,6 +3,7 @@ go:
     - "1.12"
 env:
     - GO111MODULE=on
+
 services:
     - mongodb
 
@@ -28,3 +29,4 @@ jobs:
           script:
               - cd webview-service
               - go build -ldflags "-s -w" -race
+
