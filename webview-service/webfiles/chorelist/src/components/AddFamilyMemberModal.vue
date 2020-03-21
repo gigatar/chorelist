@@ -142,6 +142,9 @@ export default {
             case 409:
               this.alert.text = "Email address already in use";
               break;
+            case 413:
+              this.alert.text = "Maximum family size reached";
+              break;
             default:
               this.alert.text = "An unknown error occured";
           }
