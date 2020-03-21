@@ -6,6 +6,10 @@ env:
 services:
     - mongodb
 
+addons:
+    hosts:
+        - mongodb
+
 before_install:
     - go get github.com/mattn/goveralls
 
