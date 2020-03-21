@@ -68,6 +68,22 @@ export default {
             reject(error.response);
           });
       });
+    },
+    deleteFamilyMember(context, userID) {
+      return new Promise((resolve, reject) => {
+        axios
+          .delete("/rest/v1/families/persons/" + userID, {
+            headers: {
+              Authorization: "Bearer " + context.getters.getAuthToken
+            }
+          })
+          .then(({ success }) => {
+            resolve(success);
+          })
+          .catch(function(error) {
+            reject(error.response);
+          });
+      });
     }
   }
 };

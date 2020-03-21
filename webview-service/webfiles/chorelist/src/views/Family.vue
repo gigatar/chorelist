@@ -51,11 +51,19 @@
           sort-by="type"
           sort-desc
         >
-          <div slot="table-busy" class="text-center text-primary my-2">
+          <template slot="table-busy" class="text-center text-primary my-2">
             <b-spinner type="grow" class="align-middle"></b-spinner>
             <strong>Loading Family...</strong>
-          </div></b-table
-        >
+          </template>
+          <template v-slot:cell(actions)="item"
+            ><b-button
+              variant="outline-danger"
+              @click="deleteFamilyMember(item.item.id, item.item.name)"
+              v-if="userType === 'parent' && currentUserID !== item.item.id"
+            >
+              <octicon name="trashcan" scale="1"></octicon> </b-button
+          ></template>
+        </b-table>
 
         <b-button
           variant="primary"
@@ -93,6 +101,9 @@ export default {
   computed: {
     userType() {
       return this.$store.getters.getUserType;
+    },
+    currentUserID() {
+      return this.$store.getters.getUserID;
     }
   },
   data: () => ({
@@ -103,7 +114,8 @@ export default {
     familyFields: [
       { key: "name", sortable: true },
       { key: "type", sortable: true },
-      { key: "lastLogin", sortable: true }
+      { key: "lastLogin", sortable: true },
+      { key: "Actions" }
     ],
     familyMembers: []
   }),
@@ -112,6 +124,7 @@ export default {
   },
   methods: {
     getFamily() {
+      this.loadingFamily = true;
       this.familyName = { name: null };
       this.familyMembers = [];
       this.$store
@@ -123,6 +136,8 @@ export default {
             this.getFamilyMember(success.data.person[i])
               .then(response => {
                 this.familyMembers.push({
+                  id: response.id,
+                  email: response.email,
                   name: response.name,
                   type: response.type,
                   lastLogin: unixtTimeToLocal(response.lastLogin) || "Never"
@@ -165,7 +180,8 @@ export default {
           this.alert.show = true;
         })
         .finally(() => {
-          this.loadingFamily = false;
+          // Smooth it over.
+          setTimeout(()=>this.loadingFamily = false, 300); 
         });
     },
     addFamilyMember() {
@@ -255,6 +271,63 @@ export default {
             .dispatch("deleteFamily")
             .then(() => {
               this.$store.dispatch("logout");
+            })
+            .catch(error => {
+              this.alert = {
+                variant: "danger",
+                text: ""
+              };
+              switch (error.status) {
+                case 400:
+                  this.alert.text = "Invalid Family or User ID";
+                  break;
+                case 401:
+                  this.alert.text = "Unauthorized";
+                  break;
+                case 403:
+                  this.alert.text = "HA! Nice try kid.";
+                  break;
+                default:
+                  this.alert.text = "An unknown error occured";
+              }
+              this.alert.show = true;
+            });
+        });
+    },
+    deleteFamilyMember(userID, userName) {
+      this.$bvModal
+        .msgBoxConfirm(
+          "Are you sure you want to delete " +
+            userName +
+            "?  This action is irreversable and will remove them as the assignee of all chores.",
+          {
+            title: "Please Confirm",
+            size: "lg",
+            buttonSize: "sm",
+            okVariant: "danger",
+            okTitle: "YES",
+            cancelTitle: "NO",
+            footerClass: "p-2",
+            hideHeaderClose: true,
+            noCloseOnBackdrop: true,
+            noCloseOnEsc: true
+          }
+        )
+        .then(value => {
+          // Even though we should only get bool bail if it's not explicitly true.
+          if (value !== true) {
+            return;
+          }
+
+          this.$store
+            .dispatch("deleteFamilyMember", userID)
+            .then(() => {
+              this.getFamily();
+              this.alert = {
+                variant: "success",
+                show: true,
+                text: "Successfully deleted " + userName
+              };
             })
             .catch(error => {
               this.alert = {

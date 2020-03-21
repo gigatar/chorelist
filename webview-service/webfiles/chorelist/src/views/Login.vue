@@ -17,7 +17,7 @@
                   id="email-input"
                   v-model="loginData.email"
                   required
-                  type="text"
+                  type="email"
                   placeholder="Enter Email Address"
                   autocomplete="email"
                 ></b-form-input>

@@ -6,6 +6,7 @@ export default {
     email: sessionStorage.getItem("email") || "",
     userName: sessionStorage.getItem("userName") || "",
     userType: sessionStorage.getItem("userType") || "",
+    userID: sessionStorage.getItem("userID") || "",
     accessToken: null,
     accessTokenExpiration: 0,
     accessTokenTTL: 0
@@ -31,6 +32,9 @@ export default {
     },
     getEmail(state) {
       return state.email;
+    },
+    getUserID(state) {
+      return state.userID;
     },
     getUserName(state) {
       return state.userName;
@@ -74,6 +78,12 @@ export default {
     },
     setUserType: (state, userType) => {
       state.userType = userType;
+    },
+    setUserID: (state, userID) => {
+      state.userID = userID;
+    },
+    removeUserID: state => {
+      state.userID = null;
     }
   },
   actions: {
@@ -111,10 +121,12 @@ export default {
               sessionStorage.setItem("accessToken", headers.authorization);
               sessionStorage.setItem("email", data.email);
               sessionStorage.setItem("userName", data.name);
+              sessionStorage.setItem("userID", data.id);
               sessionStorage.setItem("userType", data.type);
               context.commit("updateAccessToken", headers.authorization);
               context.commit("setUserName", data.name);
               context.commit("setEmail", data.email);
+              context.commit("setUserID", data.id);
               context.commit("setUserType", data.type);
               resolve(true);
             }
@@ -134,10 +146,13 @@ export default {
     logout(context) {
       sessionStorage.removeItem("accessToken");
       sessionStorage.removeItem("email");
-      sessionStorage.removeItem("displayName");
+      sessionStorage.removeItem("userName");
+      sessionStorage.removeItem("userType");
       context.commit("removeAccessToken");
+      context.commit("removeUserName");
       context.commit("removeEmail");
-      context.commit("removeDisplayName");
+      context.commit("removeUserID");
+      context.commit("removeUserType");
 
       router.go("/");
     },
