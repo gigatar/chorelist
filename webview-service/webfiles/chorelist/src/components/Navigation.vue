@@ -7,15 +7,13 @@
       <b-navbar-toggle target="nav-collapse"></b-navbar-toggle>
       <b-collapse id="nav-collapse" is-nav>
         <b-navbar-nav>
-          <b-nav>
-            <b-nav-item to="dashboard" exact exact-active-class="active"
-              >Dashboard</b-nav-item
-            >
-            <b-nav-item href="#">Chores</b-nav-item>
-            <b-nav-item to="family" exact exact-active-class="active"
-              >Family</b-nav-item
-            >
-          </b-nav>
+          <b-nav-item to="dashboard" exact exact-active-class="active"
+            >Dashboard</b-nav-item
+          >
+          <b-nav-item href="#">Chores</b-nav-item>
+          <b-nav-item to="family" exact exact-active-class="active"
+            >Family</b-nav-item
+          >
         </b-navbar-nav>
 
         <!-- Right aligned -->
