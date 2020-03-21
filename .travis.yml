@@ -8,8 +8,9 @@ before_install:
 
 jobs:
     include:
-        - stage: Run Unit Tests
+        - stage: Unit Test User Service
           script:
+              - cd user-service
               - go test -race -covermode atomic -coverprofile=profile.cov -v ./...
               - $GOPATH/bin/goveralls -coverprofile=profile.cov -service=travis-ci
         - stage: Build User Service
