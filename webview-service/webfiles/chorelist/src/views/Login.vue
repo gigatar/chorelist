@@ -1,8 +1,12 @@
 <template>
   <b-container fluid>
-    <b-alert :variant="alert.variant" v-model="alert.show" dismissible>{{
-      alert.text
-    }}</b-alert>
+    <b-alert
+      class="mt-1"
+      :variant="alert.variant"
+      v-model="alert.show"
+      dismissible
+      >{{ alert.text }}</b-alert
+    >
     <b-row align-h="center">
       <b-col lg="3">
         <b-container fluid>
@@ -20,6 +24,7 @@
                   type="email"
                   placeholder="Enter Email Address"
                   autocomplete="email"
+                  :disabled="loginDisabled"
                 ></b-form-input>
               </b-input-group>
             </b-form-group>
@@ -35,6 +40,7 @@
                   type="password"
                   placeholder="Enter Password"
                   autocomplete="current-password"
+                  :disabled="loginDisabled"
                 ></b-form-input>
               </b-input-group>
             </b-form-group>
@@ -42,7 +48,7 @@
               block
               type="submit"
               variant="primary"
-              :disabled="loginDisabled"
+              :disabled="loginDisabled || !enableLoginButton"
               @click="login"
               >Login</b-button
             >
@@ -57,9 +63,20 @@ export default {
   name: "Login",
   data: () => ({
     loginDisabled: false,
-    loginData: { email: null, password: null },
+    loginData: { email: "", password: "" },
     alert: { show: false, variant: "danger", text: "" }
   }),
+  computed: {
+    enableLoginButton() {
+      if (
+        this.loginData.email.length > 3 &&
+        this.loginData.password.length >= 8
+      ) {
+        return true;
+      }
+      return false;
+    }
+  },
   beforeMount() {
     this.checkSignup();
   },
@@ -94,19 +111,22 @@ export default {
           this.$router.push("/dashboard");
         })
         .catch(error => {
-          if (error.status === 400) {
-            this.alert = {
-              show: true,
-              variant: "danger",
-              text: "Invalid Username and/or Password"
-            };
-          } else {
-            this.alert = {
-              show: true,
-              variant: "danger",
-              text: "Unknown error: " + error.data.message
-            };
+          this.alert = {
+            variant: "danger",
+            text: ""
+          };
+          switch (error.status) {
+            case 400:
+              this.alert.text = "Invalid username and/or password";
+              break;
+            case 503:
+              this.alert.text =
+                "Backend service is down - please try again in a couple minutes";
+              break;
+            default:
+              this.alert.text = "Unable to complete request - try again later";
           }
+          this.alert.show = true;
           this.loginDisabled = false;
         });
     }

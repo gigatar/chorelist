@@ -181,7 +181,7 @@ export default {
         })
         .finally(() => {
           // Smooth it over.
-          setTimeout(()=>this.loadingFamily = false, 300); 
+          setTimeout(() => (this.loadingFamily = false), 300);
         });
     },
     addFamilyMember() {
