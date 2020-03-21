@@ -183,6 +183,19 @@ func (f *FamilyController) AddFamilyMember(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
+	// Get Family
+	family, err := f.dao.GetFamily(familyID)
+	if err != nil {
+		log.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	if !family.ValidateAddPerson() {
+		w.WriteHeader(http.StatusRequestEntityTooLarge)
+		return
+	}
+
 	// Add familyID to person
 	inputPerson.FamilyID = familyID
 
@@ -195,14 +208,6 @@ func (f *FamilyController) AddFamilyMember(w http.ResponseWriter, r *http.Reques
 			log.Println(err)
 			w.WriteHeader(http.StatusInternalServerError)
 		}
-		return
-	}
-
-	// Get Family
-	family, err := f.dao.GetFamily(familyID)
-	if err != nil {
-		log.Println(err)
-		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
