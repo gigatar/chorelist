@@ -25,6 +25,8 @@ func (s SignupEmail) Validate() bool {
 		return false
 	} else if !s.ValidateEmail() {
 		return false
+	} else if len(s.Code) != 15 {
+		return false
 	}
 
 	return true
