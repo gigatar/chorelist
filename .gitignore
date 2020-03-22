@@ -36,3 +36,6 @@ yarn-error.log*
 *.njsproj
 *.sln
 *.sw?
+
+# config Json from email service (Don't want to accidently push creds to repo)
+email-service/config.json

@@ -1,9 +1,11 @@
 package controllers
 
 import (
+	"bytes"
 	"chorelist/user-service/daos"
 	"chorelist/user-service/models"
 	"encoding/json"
+	"errors"
 	"log"
 	"math/rand"
 	"net/http"
@@ -84,7 +86,12 @@ func (s *SignupController) CreateSignup(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	//TODO: Email code
+	// Email code
+	if err := s.SendEmail(inputSignup.Person.Email, inputSignup.Person.Name, inputSignup.Code); err != nil {
+		log.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 
 	w.WriteHeader(http.StatusAccepted)
 }
@@ -171,4 +178,42 @@ func (s *SignupController) generateCode(length int) string {
 		b[i] = letterBytes[rand.Intn(len(letterBytes))]
 	}
 	return string(b)
+}
+
+// SendEmail sends our signup email to the email service.
+func (s *SignupController) SendEmail(email, name, code string) error {
+
+	signupRequest := struct {
+		Email string `json:"email"`
+		Name  string `json:"name"`
+		Code  string `json:"code"`
+	}{
+		Email: email,
+		Name:  name,
+		Code:  code,
+	}
+
+	// Call email-service
+	emailRequest, err := json.Marshal(signupRequest)
+	if err != nil {
+		return err
+	}
+	req, err := http.NewRequest("POST", "http://email-service:8080/rest/v1/emails/signup", bytes.NewBuffer(emailRequest))
+	if err != nil {
+		return err
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusNoContent {
+		return errors.New(resp.Status)
+	}
+	return nil
 }
