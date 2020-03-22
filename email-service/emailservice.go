@@ -1,6 +1,7 @@
 package main
 
 import (
+	"chorelist/email-service/controllers"
 	"crypto/tls"
 	"log"
 	"net/http"
@@ -11,8 +12,18 @@ import (
 )
 
 func main() {
+	var email controllers.EmailController
+
+	// Load config
+	if err := email.Initialize("config.json"); err != nil {
+		log.Fatal(err)
+	}
+
 	router := mux.NewRouter()
-	// rest := router.PathPrefix("/rest/v1").Subrouter()
+	rest := router.PathPrefix("/rest/v1").Subrouter()
+	emailEndpoint := rest.PathPrefix("/emails").Subrouter()
+
+	emailEndpoint.HandleFunc("/signup", email.SignupEmail).Methods("POST")
 
 	// Configure CORS
 	allowedMethods := handlers.AllowedMethods([]string{

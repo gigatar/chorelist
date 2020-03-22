@@ -14,7 +14,10 @@ RUN if [ ! -d vendor ]; \
 RUN go build -ldflags "-s -w" -mod=vendor -o email .
 
 FROM alpine:3.11
+RUN apk --no-cache add ca-certificates
 WORKDIR /app
 COPY --from=builder /app/email /app
+COPY --from=builder /app/config.json /app
+COPY --from=builder /app/templates /app/templates
 
 CMD ["/app/email"]
