@@ -54,8 +54,8 @@ func (c *ChoreController) ListFamilyChores(w http.ResponseWriter, r *http.Reques
 	json.NewEncoder(w).Encode(chores)
 }
 
-// AddChore adds a new chore in the system.
-func (c *ChoreController) AddChore(w http.ResponseWriter, r *http.Request) {
+// CreateChore adds a new chore in the system.
+func (c *ChoreController) CreateChore(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	// Deserialize request

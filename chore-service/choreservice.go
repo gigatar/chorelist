@@ -31,7 +31,7 @@ func main() {
 
 	// Authenticated endpoints
 	choreEndpoint.HandleFunc("", jwt.ValidateMiddleware(chore.ListFamilyChores)).Methods("GET")
-	choreEndpoint.HandleFunc("", jwt.ValidateMiddleware(chore.AddChore)).Methods("POST")
+	choreEndpoint.HandleFunc("", jwt.ValidateMiddleware(chore.CreateChore)).Methods("POST")
 
 	// Configure CORS
 	allowedMethods := handlers.AllowedMethods([]string{
