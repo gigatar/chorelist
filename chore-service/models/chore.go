@@ -38,6 +38,22 @@ func (c Chore) Validate() bool {
 	return true
 }
 
+// ValidateCreate extends the Validate method to ensure we have
+// certain restrictions when creating a chore.
+func (c Chore) ValidateCreate() bool {
+	if !c.Validate() {
+		return false
+	} else if c.DateCompleted > 0 {
+		return false
+	} else if c.Notes != nil {
+		return false
+	} else if len(c.VerifiedBy) > 0 {
+		return false
+	}
+
+	return true
+}
+
 // ValidateTitle validates title is within bounds.
 func (c Chore) ValidateTitle() bool {
 	if len(c.Title) < 1 || len(c.Title) > 128 {

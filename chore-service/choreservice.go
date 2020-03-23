@@ -14,6 +14,7 @@ import (
 )
 
 func main() {
+
 	// Initialize Database
 	if err := database.DB.Init(); err != nil {
 		log.Fatal(err)
@@ -29,7 +30,8 @@ func main() {
 	// Unauthenticated endpoints
 
 	// Authenticated endpoints
-	choreEndpoint.HandleFunc("", jwt.ValidateMiddleware(chore.ListChores)).Methods("GET")
+	choreEndpoint.HandleFunc("", jwt.ValidateMiddleware(chore.ListFamilyChores)).Methods("GET")
+	choreEndpoint.HandleFunc("", jwt.ValidateMiddleware(chore.AddChore)).Methods("POST")
 
 	// Configure CORS
 	allowedMethods := handlers.AllowedMethods([]string{
