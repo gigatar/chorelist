@@ -16,7 +16,11 @@ type Service interface {
 	GetUsers(ctx context.Context) ([]User, error)
 	GetUserByID(ctx context.Context, inputUser User) (User, error)
 	Login(ctx context.Context, inputUser User) (User, error)
+	ChangeName(ctx context.Context, inputUser User) error
+	ChangePassword(ctx context.Context, inputUser User) error
 }
+
+const bcryptPasswordCost = 10
 
 var (
 	errNotFound   = errors.New("not found")
@@ -39,6 +43,61 @@ type User struct {
 // NewService returns our user service.
 func NewService() Service {
 	return User{}
+}
+
+// ChangePassword replaces the password of a user.
+func (u User) ChangePassword(ctx context.Context, inputUser User) error {
+	var db Database
+	collection, err := db.GetPersonCollection(ctx)
+	if err != nil {
+		return err
+	}
+
+	// Get user information from database.
+	var current User
+	err = collection.FindOne(ctx, bson.M{"_id": inputUser.ID}).Decode(&current)
+	if err != nil {
+		if strings.Contains(err.Error(), "no documents") {
+			return errBadRequest
+		}
+		return err
+	}
+
+	// Check Hash
+	err = bcrypt.CompareHashAndPassword([]byte(current.Password), []byte(inputUser.OldPassword))
+	if err != nil {
+		return errBadRequest
+	}
+
+	password, err := bcrypt.GenerateFromPassword([]byte(inputUser.Password), bcryptPasswordCost)
+	if err != nil {
+		return err
+	}
+	_, err = collection.UpdateOne(ctx, bson.M{"_id": inputUser.ID}, bson.M{"$set": bson.M{"password": string(password)}})
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// ChangeName modifies the name of a user.
+func (User) ChangeName(ctx context.Context, inputUser User) error {
+	var db Database
+	collection, err := db.GetPersonCollection(ctx)
+	if err != nil {
+		return err
+	}
+
+	result, err := collection.UpdateOne(ctx, bson.M{"_id": inputUser.ID}, bson.M{"$set": bson.M{"name": inputUser.Name}})
+	if err != nil {
+		return err
+	}
+
+	if result.ModifiedCount == 0 {
+		return errBadRequest
+	}
+	return nil
 }
 
 // GetUsers returns all users from our system.

@@ -46,6 +46,18 @@ func NewHTTPServer(s Service) *http.Server {
 		encodeGetUserByIDResponse,
 		options...,
 	))
+	usersAuth.Methods("PATCH").Path("/name").Handler(httptransport.NewServer(
+		endpoints.ChangeName,
+		decodeChangeNameRequest,
+		encodeChangeNameResponse,
+		options...,
+	))
+	usersAuth.Methods("PATCH").Path("/password").Handler(httptransport.NewServer(
+		endpoints.ChangePassword,
+		decodeChangePasswordRequest,
+		encodeChangePasswordResponse,
+		options...,
+	))
 
 	// Configure CORS
 	allowedMethods := handlers.AllowedMethods([]string{

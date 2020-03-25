@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"strings"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
@@ -26,16 +27,75 @@ type getUserByIDResponse struct {
 type loginRequest struct {
 	Login User `json:"user"`
 }
-
 type loginResponse struct {
 	Login User `json:"user,omitempty"`
 }
+
+type changeNameRequest struct {
+	User User `json:"user"`
+}
+type changeNameResponse struct{}
+type changePasswordRequest struct {
+	User User `json:"user"`
+}
+type changePasswordResponse struct{}
 
 // Decoders
 func decodeGetUsersRequest(ctx context.Context, r *http.Request) (interface{}, error) {
 	// Nothing to really do here...
 	var request getUsersRequest
 	return request, nil
+}
+
+func decodeChangeNameRequest(ctx context.Context, r *http.Request) (interface{}, error) {
+	var user User
+	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
+		return User{}, err
+	}
+	if !user.ValidateName() {
+		return User{}, errBadRequest
+	}
+
+	// Get userID from JWT
+	var jwt token.JWTToken
+	userID, err := jwt.GetUser(r.Header.Get("authorization"))
+	if err != nil {
+		return User{}, err
+	}
+
+	id, err := primitive.ObjectIDFromHex(userID)
+	if err != nil {
+		log.Println(err)
+		return User{}, errBadRequest
+	}
+	user.ID = id
+
+	return user, nil
+}
+func decodeChangePasswordRequest(ctx context.Context, r *http.Request) (interface{}, error) {
+	var user User
+	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
+		return User{}, err
+	}
+	if !user.ValidatePassword() {
+		return User{}, errBadRequest
+	}
+
+	// Get userID from JWT
+	var jwt token.JWTToken
+	userID, err := jwt.GetUser(r.Header.Get("authorization"))
+	if err != nil {
+		return User{}, err
+	}
+
+	id, err := primitive.ObjectIDFromHex(userID)
+	if err != nil {
+		log.Println(err)
+		return User{}, errBadRequest
+	}
+	user.ID = id
+
+	return user, nil
 }
 
 func decodeGetUserByIDRequest(ctx context.Context, r *http.Request) (interface{}, error) {
@@ -95,8 +155,9 @@ func encodeLoginResponse(ctx context.Context, w http.ResponseWriter, r interface
 	response := r.(loginResponse)
 
 	id, err := response.Login.ID.MarshalJSON()
+	idString := strings.Trim(string(id), "\"")
 	var jwt token.JWTToken
-	token, err := jwt.CreateJWT("127.0.0.1:80", string(id), response.Login.FamilyID)
+	token, err := jwt.CreateJWT("127.0.0.1:80", idString, response.Login.FamilyID)
 	if err != nil {
 		return err
 	}
@@ -104,6 +165,16 @@ func encodeLoginResponse(ctx context.Context, w http.ResponseWriter, r interface
 	w.Header().Add("Authorization", token)
 
 	return json.NewEncoder(w).Encode(response.Login)
+}
+
+func encodeChangeNameResponse(ctx context.Context, w http.ResponseWriter, r interface{}) error {
+	w.WriteHeader(http.StatusNoContent)
+	return nil
+}
+
+func encodeChangePasswordResponse(ctx context.Context, w http.ResponseWriter, r interface{}) error {
+	w.WriteHeader(http.StatusNoContent)
+	return nil
 }
 
 func encodeError(_ context.Context, err error, w http.ResponseWriter) {
