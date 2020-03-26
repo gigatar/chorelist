@@ -73,6 +73,8 @@ func (u User) ChangePassword(ctx context.Context, inputUser User) error {
 	if err != nil {
 		return err
 	}
+
+	// We don't care about the modified count because it will always mutate (hopefully if bcrypt works...).
 	_, err = collection.UpdateOne(ctx, bson.M{"_id": inputUser.ID}, bson.M{"$set": bson.M{"password": string(password)}})
 	if err != nil {
 		return err
@@ -89,14 +91,12 @@ func (User) ChangeName(ctx context.Context, inputUser User) error {
 		return err
 	}
 
-	result, err := collection.UpdateOne(ctx, bson.M{"_id": inputUser.ID}, bson.M{"$set": bson.M{"name": inputUser.Name}})
+	// We don't care about the modified count because we want to be idemopotent.
+	_, err = collection.UpdateOne(ctx, bson.M{"_id": inputUser.ID}, bson.M{"$set": bson.M{"name": inputUser.Name}})
 	if err != nil {
 		return err
 	}
 
-	if result.ModifiedCount == 0 {
-		return gigatarerrors.ErrBadRequest
-	}
 	return nil
 }
 

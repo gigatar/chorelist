@@ -4,7 +4,6 @@ import (
 	"chorelist/user-service-gokit/gigatarerrors"
 	"context"
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 	"strings"
@@ -15,17 +14,12 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+// Get Family By ID
 type getFamilyByIDRequest struct{}
 type getFamilyByIDResponse struct {
 	Family Family `json:"family,omitempty"`
 }
 
-type changeNameRequest struct {
-	Family Family `json:"family,omitempty"`
-}
-type changeNameResponse struct{}
-
-// decoders
 func decodeGetFamilyByIDRequest(ctx context.Context, r *http.Request) (interface{}, error) {
 	var family Family
 
@@ -54,9 +48,23 @@ func decodeGetFamilyByIDRequest(ctx context.Context, r *http.Request) (interface
 
 	family.ID = id
 
-	fmt.Println(id)
 	return family, nil
 }
+func encodeGetFamilyByIDResponse(ctx context.Context, w http.ResponseWriter, r interface{}) error {
+	response := r.(getFamilyByIDResponse)
+	if len(response.Family.Name) < 1 {
+		return gigatarerrors.ErrNotFound
+	}
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+// Change Family Name
+type changeNameRequest struct {
+	Family Family `json:"family,omitempty"`
+}
+type changeNameResponse struct{}
+
 func decodeChangeNameRequest(ctx context.Context, r *http.Request) (interface{}, error) {
 	var family Family
 	if err := json.NewDecoder(r.Body).Decode(&family); err != nil {
@@ -82,21 +90,12 @@ func decodeChangeNameRequest(ctx context.Context, r *http.Request) (interface{},
 	return family, nil
 }
 
-// encoders
-func encodeGetFamilyByIDResponse(ctx context.Context, w http.ResponseWriter, r interface{}) error {
-	response := r.(getFamilyByIDResponse)
-	if len(response.Family.Name) < 1 {
-		return gigatarerrors.ErrNotFound
-	}
-
-	return json.NewEncoder(w).Encode(response)
-}
-
 func encodeChangeNameResponse(ctx context.Context, w http.ResponseWriter, r interface{}) error {
 	w.WriteHeader(http.StatusNoContent)
 	return nil
 }
 
+// Error Encoding
 func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 	if err == nil {
 		log.Fatal("encodeError with nil error!")

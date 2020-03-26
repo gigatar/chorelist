@@ -13,6 +13,10 @@ import (
 type Service interface {
 	GetFamilyByID(ctx context.Context, inputFamily Family) (Family, error)
 	ChangeName(ctx context.Context, inputFamily Family) error
+	CreateFamily(ctx context.Context, inputFamily Family) (interface{}, error)
+	// Add Family Member
+	// Remove Family Member
+	// Delete Family
 }
 
 // Family data type
@@ -25,6 +29,22 @@ type Family struct {
 // NewService returns our user service.
 func NewService() Service {
 	return Family{}
+}
+
+// CreateFamily Adds a new family and returns the resourceID.
+func (Family) CreateFamily(ctx context.Context, inputFamily Family) (interface{}, error) {
+	var db Database
+	collection, err := db.GetFamilyCollection(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	result, err := collection.InsertOne(ctx, inputFamily)
+	if err != nil {
+		return nil, err
+	}
+
+	return result.InsertedID, nil
 }
 
 // GetFamilyByID returns a specific family from the database.
@@ -55,13 +75,11 @@ func (Family) ChangeName(ctx context.Context, inputFamily Family) error {
 		return err
 	}
 
-	result, err := collection.UpdateOne(ctx, bson.M{"_id": inputFamily.ID}, bson.M{"$set": bson.M{"name": inputFamily.Name}})
+	// We don't care about the modified count because we want to be idemopotent.
+	_, err = collection.UpdateOne(ctx, bson.M{"_id": inputFamily.ID}, bson.M{"$set": bson.M{"name": inputFamily.Name}})
 	if err != nil {
 		return err
 	}
 
-	if result.ModifiedCount == 0 {
-		return gigatarerrors.ErrBadRequest
-	}
 	return nil
 }

@@ -73,7 +73,7 @@ func NewHTTPServer(s Service) *http.Server {
 	// Setup HTTPS HERE.
 	server := &http.Server{
 		Handler:      handlers.CORS(allowedMethods, allowedHeaders, allowedOrigin, exposedHeaders)(router),
-		Addr:         ":8080",
+		Addr:         ":9000",
 		WriteTimeout: 60 * time.Second,
 		ReadTimeout:  60 * time.Second,
 		TLSConfig: &tls.Config{

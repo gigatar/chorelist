@@ -55,7 +55,7 @@ func validateJWT(next http.Handler) http.Handler {
 				return
 			}
 			log.Println(err)
-			w.WriteHeader(http.StatusInternalServerError)
+			w.WriteHeader(http.StatusUnauthorized)
 			return
 
 		}

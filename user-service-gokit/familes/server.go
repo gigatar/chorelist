@@ -19,6 +19,7 @@ func NewHTTPServer(s Service) *http.Server {
 	}
 
 	router := mux.NewRouter()
+	familiesInternal := router.PathPrefix("/internal/v1/families").Subrouter()
 	familiesAuth := router.PathPrefix("/rest/v1/families").Subrouter()
 
 	// Add middleware
@@ -26,6 +27,14 @@ func NewHTTPServer(s Service) *http.Server {
 	familiesAuth.Use(validateJWT)
 
 	// Unauthenticated Endpoints
+
+	// Internal Endpoints
+	familiesInternal.Methods("POST").Path("/create").Handler(httptransport.NewServer(
+		endpoints.CreateFamily,
+		decodeCreateFamilyRequest,
+		encodeCreateFamilyResponse,
+		options...,
+	))
 
 	// Authenticated Endpoints
 	familiesAuth.Methods("GET").Path("/{id}").Handler(httptransport.NewServer(
@@ -55,7 +64,7 @@ func NewHTTPServer(s Service) *http.Server {
 	// Setup HTTPS HERE.
 	server := &http.Server{
 		Handler:      handlers.CORS(allowedMethods, allowedHeaders, allowedOrigin, exposedHeaders)(router),
-		Addr:         ":8081",
+		Addr:         ":9001",
 		WriteTimeout: 60 * time.Second,
 		ReadTimeout:  60 * time.Second,
 		TLSConfig: &tls.Config{
