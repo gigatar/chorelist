@@ -27,6 +27,38 @@ func commonMiddleware(next http.Handler) http.Handler {
 	})
 }
 
+func listBackendMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+		ifaces, err := net.Interfaces()
+		if err == nil {
+			// handle err
+			for _, i := range ifaces {
+				addrs, err := i.Addrs()
+				if err != nil {
+					break
+				}
+
+				for _, addr := range addrs {
+					var ip net.IP
+					switch v := addr.(type) {
+					case *net.IPNet:
+						ip = v.IP
+					case *net.IPAddr:
+						ip = v.IP
+					}
+					if !ip.IsLoopback() {
+						w.Header().Add("Backend-Server", ip.String())
+						break
+					}
+				}
+			}
+		}
+
+		next.ServeHTTP(w, r)
+	})
+}
+
 // ValidateMiddleware is how we ensure that only authorized persons are able to access endpoints.
 func validateJWT(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

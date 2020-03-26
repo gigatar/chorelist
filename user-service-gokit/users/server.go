@@ -24,6 +24,7 @@ func NewHTTPServer(s Service) *http.Server {
 
 	// Add middleware
 	router.Use(commonMiddleware)
+	router.Use(listBackendMiddleware)
 	usersAuth.Use(validateJWT)
 
 	// Unauthenticated Endpoints
