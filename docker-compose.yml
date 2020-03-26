@@ -41,14 +41,24 @@ services:
             - mongodb
         labels:
             - traefik.enable=true
-            - traefik.http.services.users.loadbalancer.server.port=8080
+            - traefik.http.services.users.loadbalancer.server.port=9000
             - traefik.http.routers.users.rule=Host("localhost")
             - traefik.http.routers.users.rule=PathPrefix("/rest/v1/users")
             - traefik.http.routers.users.service=users
-            - traefik.http.services.families.loadbalancer.server.port=8081
+            - traefik.http.routers.internalusers.entryPoints=internal
+            - traefik.http.services.internalusers.loadbalancer.server.port=9000
+            - traefik.http.routers.internalusers.rule=Host("localhost")
+            - traefik.http.routers.internalusers.rule=PathPrefix("/internal/v1/users")
+            - traefik.http.routers.internalusers.service=internalusers
+            - traefik.http.services.families.loadbalancer.server.port=9001
             - traefik.http.routers.families.rule=Host("localhost")
             - traefik.http.routers.families.rule=PathPrefix("/rest/v1/families")
             - traefik.http.routers.families.service=families
+            - traefik.http.routers.internalfamilies.entryPoints=internal
+            - traefik.http.services.internalfamilies.loadbalancer.server.port=9001
+            - traefik.http.routers.internalfamilies.rule=Host("localhost")
+            - traefik.http.routers.internalfamilies.rule=PathPrefix("/internal/v1/families")
+            - traefik.http.routers.internalfamilies.service=internalfamilies
             
     chore-service:
         build: chore-service/.
