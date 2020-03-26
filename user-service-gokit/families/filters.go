@@ -1,4 +1,4 @@
-package familes
+package families
 
 // Validate input for family.
 func (f Family) Validate() bool {

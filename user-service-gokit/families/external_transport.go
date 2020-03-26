@@ -1,4 +1,4 @@
-package familes
+package families
 
 import (
 	"chorelist/user-service-gokit/gigatarerrors"
