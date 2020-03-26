@@ -1,6 +1,7 @@
 package users
 
 import (
+	"chorelist/user-service-gokit/gigatarerrors"
 	"context"
 	"encoding/json"
 	"log"
@@ -14,7 +15,9 @@ import (
 	"github.com/gigatar/chorelist/token"
 )
 
-type getUsersRequest struct{}
+type getUsersRequest struct {
+	FamilyID string `json:"familyID,omitempty"`
+}
 type getUsersResponse struct {
 	Users []User `json:"users,omitempty"`
 }
@@ -42,8 +45,16 @@ type changePasswordResponse struct{}
 
 // Decoders
 func decodeGetUsersRequest(ctx context.Context, r *http.Request) (interface{}, error) {
-	// Nothing to really do here...
+	// Limit to just our family.
+	// Get familyID from JWT
+	var jwt token.JWTToken
+	familyID, err := jwt.GetFamily(r.Header.Get("authorization"))
+	if err != nil {
+		return getUsersRequest{}, err
+	}
+
 	var request getUsersRequest
+	request.FamilyID = familyID
 	return request, nil
 }
 
@@ -53,7 +64,7 @@ func decodeChangeNameRequest(ctx context.Context, r *http.Request) (interface{},
 		return User{}, err
 	}
 	if !user.ValidateName() {
-		return User{}, errBadRequest
+		return User{}, gigatarerrors.ErrBadRequest
 	}
 
 	// Get userID from JWT
@@ -66,7 +77,7 @@ func decodeChangeNameRequest(ctx context.Context, r *http.Request) (interface{},
 	id, err := primitive.ObjectIDFromHex(userID)
 	if err != nil {
 		log.Println(err)
-		return User{}, errBadRequest
+		return User{}, gigatarerrors.ErrBadRequest
 	}
 	user.ID = id
 
@@ -78,7 +89,7 @@ func decodeChangePasswordRequest(ctx context.Context, r *http.Request) (interfac
 		return User{}, err
 	}
 	if !user.ValidatePassword() {
-		return User{}, errBadRequest
+		return User{}, gigatarerrors.ErrBadRequest
 	}
 
 	// Get userID from JWT
@@ -91,7 +102,7 @@ func decodeChangePasswordRequest(ctx context.Context, r *http.Request) (interfac
 	id, err := primitive.ObjectIDFromHex(userID)
 	if err != nil {
 		log.Println(err)
-		return User{}, errBadRequest
+		return User{}, gigatarerrors.ErrBadRequest
 	}
 	user.ID = id
 
@@ -103,12 +114,12 @@ func decodeGetUserByIDRequest(ctx context.Context, r *http.Request) (interface{}
 
 	vars := mux.Vars(r)
 	if _, ok := vars["id"]; !ok {
-		return User{}, errBadRequest
+		return User{}, gigatarerrors.ErrBadRequest
 	}
 
 	id, err := primitive.ObjectIDFromHex(vars["id"])
 	if err != nil {
-		return User{}, errBadRequest
+		return User{}, gigatarerrors.ErrBadRequest
 	}
 	user.ID = id
 
@@ -145,7 +156,7 @@ func encodeGetUsersResponse(ctx context.Context, w http.ResponseWriter, r interf
 func encodeGetUserByIDResponse(ctx context.Context, w http.ResponseWriter, r interface{}) error {
 	response := r.(getUserByIDResponse)
 	if len(response.User.Name) < 1 {
-		return errNotFound
+		return gigatarerrors.ErrNotFound
 	}
 
 	return json.NewEncoder(w).Encode(response)
@@ -181,24 +192,9 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 	if err == nil {
 		log.Fatal("encodeError with nil error!")
 	}
-	errCode := errorCodes(err)
+	errCode := gigatarerrors.WebErrorCodes(err)
 	w.WriteHeader(errCode)
 	// if errCode != 500 {
 	json.NewEncoder(w).Encode(map[string]interface{}{"error": err.Error()})
 	// }
-}
-
-func errorCodes(err error) int {
-	switch err {
-
-	case errBadRequest:
-		return http.StatusBadRequest
-	case errDuplicate:
-		return http.StatusConflict
-	case errNotFound:
-		return http.StatusNotFound
-	default:
-		return http.StatusInternalServerError
-	}
-
 }

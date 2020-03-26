@@ -26,15 +26,30 @@ services:
         command: mongod --smallfiles
         hostname: "mongodb"
 
+    # user-service:
+    #     build: user-service/.
+    #     depends_on:
+    #         - mongodb
+    #     labels:
+    #         - traefik.enable=true
+    #         - traefik.http.routers.users.rule=Host("localhost")
+    #         - traefik.http.routers.users.rule=PathPrefix("/rest/v1/users") || PathPrefix("/rest/v1/signups") || PathPrefix("/rest/v1/families")
+    #         - traefik.http.services.users.loadbalancer.server.port=8080
     user-service:
-        build: user-service/.
+        build: user-service-gokit/.
         depends_on:
             - mongodb
         labels:
             - traefik.enable=true
-            - traefik.http.routers.users.rule=Host("localhost")
-            - traefik.http.routers.users.rule=PathPrefix("/rest/v1/users") || PathPrefix("/rest/v1/signups") || PathPrefix("/rest/v1/families")
             - traefik.http.services.users.loadbalancer.server.port=8080
+            - traefik.http.routers.users.rule=Host("localhost")
+            - traefik.http.routers.users.rule=PathPrefix("/rest/v1/users")
+            - traefik.http.routers.users.service=users
+            - traefik.http.services.families.loadbalancer.server.port=8081
+            - traefik.http.routers.families.rule=Host("localhost")
+            - traefik.http.routers.families.rule=PathPrefix("/rest/v1/families")
+            - traefik.http.routers.families.service=families
+            
     chore-service:
         build: chore-service/.
         depends_on:

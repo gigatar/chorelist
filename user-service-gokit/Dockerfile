@@ -11,10 +11,10 @@ RUN if [ ! -d vendor ]; \
     then echo "Need to build"; go mod vendor; \
     fi
 
-RUN go build -ldflags "-s -w" -mod=vendor -o users .
+RUN go build -ldflags "-s -w" -mod=vendor -o user-service .
 
 FROM alpine:3.11
 WORKDIR /app
-COPY --from=builder /app/users /app
+COPY --from=builder /app/user-service /app
 
-CMD ["/app/users"]
+CMD ["/app/user-service"]

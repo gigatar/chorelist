@@ -29,8 +29,8 @@ func MakeServerEndpoints(srv Service) Endpoints {
 // MakeGetUsersEndpoint returns the response from our service "GetUsers".
 func MakeGetUsersEndpoint(srv Service) endpoint.Endpoint {
 	return func(ctx context.Context, inputRequest interface{}) (interface{}, error) {
-		_ = inputRequest.(getUsersRequest)
-		response, err := srv.GetUsers(ctx)
+		request := inputRequest.(getUsersRequest)
+		response, err := srv.GetUsers(ctx, request.FamilyID)
 		if err != nil {
 			return nil, err
 		}

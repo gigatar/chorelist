@@ -1,4 +1,4 @@
-package users
+package familes
 
 import (
 	"crypto/tls"
@@ -19,44 +19,26 @@ func NewHTTPServer(s Service) *http.Server {
 	}
 
 	router := mux.NewRouter()
-	users := router.PathPrefix("/rest/v1/users").Subrouter()
-	usersAuth := router.PathPrefix("/rest/v1/users").Subrouter()
+	familiesAuth := router.PathPrefix("/rest/v1/families").Subrouter()
 
 	// Add middleware
 	router.Use(commonMiddleware)
-	usersAuth.Use(validateJWT)
+	familiesAuth.Use(validateJWT)
 
 	// Unauthenticated Endpoints
-	users.Methods("POST").Path("/login").Handler(httptransport.NewServer(
-		endpoints.Login,
-		decodeLoginRequest,
-		encodeLoginResponse,
+
+	// Authenticated Endpoints
+	familiesAuth.Methods("GET").Path("/{id}").Handler(httptransport.NewServer(
+		endpoints.GetFamilyByID,
+		decodeGetFamilyByIDRequest,
+		encodeGetFamilyByIDResponse,
 		options...,
 	))
 
-	// Authenticated Endpoints
-	usersAuth.Methods("GET").Path("").Handler(httptransport.NewServer(
-		endpoints.GetUsers,
-		decodeGetUsersRequest,
-		encodeGetUsersResponse,
-		options...,
-	))
-	usersAuth.Methods("GET").Path("/{id}").Handler(httptransport.NewServer(
-		endpoints.GetUserByID,
-		decodeGetUserByIDRequest,
-		encodeGetUserByIDResponse,
-		options...,
-	))
-	usersAuth.Methods("PATCH").Path("/name").Handler(httptransport.NewServer(
+	familiesAuth.Methods("PATCH").Path("/name").Handler(httptransport.NewServer(
 		endpoints.ChangeName,
 		decodeChangeNameRequest,
 		encodeChangeNameResponse,
-		options...,
-	))
-	usersAuth.Methods("PATCH").Path("/password").Handler(httptransport.NewServer(
-		endpoints.ChangePassword,
-		decodeChangePasswordRequest,
-		encodeChangePasswordResponse,
 		options...,
 	))
 
@@ -73,7 +55,7 @@ func NewHTTPServer(s Service) *http.Server {
 	// Setup HTTPS HERE.
 	server := &http.Server{
 		Handler:      handlers.CORS(allowedMethods, allowedHeaders, allowedOrigin, exposedHeaders)(router),
-		Addr:         ":8080",
+		Addr:         ":8081",
 		WriteTimeout: 60 * time.Second,
 		ReadTimeout:  60 * time.Second,
 		TLSConfig: &tls.Config{
@@ -91,6 +73,6 @@ func NewHTTPServer(s Service) *http.Server {
 		},
 	}
 
-	log.Println("Starting User Server")
+	log.Println("Starting Families Server")
 	return server
 }

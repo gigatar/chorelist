@@ -63,7 +63,7 @@ func (db *Database) createUniquePersonIndex(ctx context.Context) error {
 // GetPersonCollection is a helper function to dial and return our person collection.
 func (db *Database) GetPersonCollection(ctx context.Context) (*mongo.Collection, error) {
 	clientOptions := options.Client()
-	clientOptions.ApplyURI("mongodb://localhost:27017")
+	clientOptions.ApplyURI("mongodb://mongodb:27017")
 
 	var err error
 

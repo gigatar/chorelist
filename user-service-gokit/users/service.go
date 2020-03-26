@@ -1,8 +1,8 @@
 package users
 
 import (
+	"chorelist/user-service-gokit/gigatarerrors"
 	"context"
-	"errors"
 	"strings"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -13,7 +13,7 @@ import (
 
 // Service defines the beahvior of our users service.
 type Service interface {
-	GetUsers(ctx context.Context) ([]User, error)
+	GetUsers(ctx context.Context, familyID string) ([]User, error)
 	GetUserByID(ctx context.Context, inputUser User) (User, error)
 	Login(ctx context.Context, inputUser User) (User, error)
 	ChangeName(ctx context.Context, inputUser User) error
@@ -22,11 +22,11 @@ type Service interface {
 
 const bcryptPasswordCost = 10
 
-var (
-	errNotFound   = errors.New("not found")
-	errDuplicate  = errors.New("duplicate")
-	errBadRequest = errors.New("bad request")
-)
+// var (
+// 	errNotFound   = errors.New("not found")
+// 	errDuplicate  = errors.New("duplicate")
+// 	errBadRequest = errors.New("bad request")
+// )
 
 // User Datatype
 type User struct {
@@ -58,7 +58,7 @@ func (u User) ChangePassword(ctx context.Context, inputUser User) error {
 	err = collection.FindOne(ctx, bson.M{"_id": inputUser.ID}).Decode(&current)
 	if err != nil {
 		if strings.Contains(err.Error(), "no documents") {
-			return errBadRequest
+			return gigatarerrors.ErrBadRequest
 		}
 		return err
 	}
@@ -66,7 +66,7 @@ func (u User) ChangePassword(ctx context.Context, inputUser User) error {
 	// Check Hash
 	err = bcrypt.CompareHashAndPassword([]byte(current.Password), []byte(inputUser.OldPassword))
 	if err != nil {
-		return errBadRequest
+		return gigatarerrors.ErrBadRequest
 	}
 
 	password, err := bcrypt.GenerateFromPassword([]byte(inputUser.Password), bcryptPasswordCost)
@@ -95,13 +95,13 @@ func (User) ChangeName(ctx context.Context, inputUser User) error {
 	}
 
 	if result.ModifiedCount == 0 {
-		return errBadRequest
+		return gigatarerrors.ErrBadRequest
 	}
 	return nil
 }
 
-// GetUsers returns all users from our system.
-func (User) GetUsers(ctx context.Context) ([]User, error) {
+// GetUsers returns all family users from our system.
+func (User) GetUsers(ctx context.Context, familyID string) ([]User, error) {
 	var db Database
 
 	collection, err := db.GetPersonCollection(ctx)
@@ -109,7 +109,7 @@ func (User) GetUsers(ctx context.Context) ([]User, error) {
 		return nil, err
 	}
 
-	cursor, err := collection.Find(ctx, bson.M{})
+	cursor, err := collection.Find(ctx, bson.M{"familyID": familyID})
 	if err != nil {
 		return nil, err
 	}
@@ -125,6 +125,9 @@ func (User) GetUsers(ctx context.Context) ([]User, error) {
 		users = append(users, user)
 	}
 
+	if len(users) == 0 {
+		return nil, gigatarerrors.ErrNotFound
+	}
 	return users, nil
 }
 
@@ -141,7 +144,7 @@ func (User) GetUserByID(ctx context.Context, inputUser User) (User, error) {
 	err = collection.FindOne(ctx, bson.M{"_id": inputUser.ID, "familyID": inputUser.FamilyID}).Decode(&user)
 	if err != nil {
 		if strings.Contains(err.Error(), "no documents") {
-			return User{}, errNotFound
+			return User{}, gigatarerrors.ErrNotFound
 		}
 		return User{}, err
 	}
@@ -162,12 +165,12 @@ func (User) Login(ctx context.Context, inputUser User) (User, error) {
 	var user User
 	err = collection.FindOne(ctx, bson.M{"email": inputUser.Email}).Decode(&user)
 	if err != nil {
-		return User{}, errBadRequest
+		return User{}, gigatarerrors.ErrBadRequest
 	}
 
 	// Validate password
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(inputUser.Password)); err != nil {
-		return User{}, errBadRequest
+		return User{}, gigatarerrors.ErrBadRequest
 	}
 
 	user.StripSensitive()
