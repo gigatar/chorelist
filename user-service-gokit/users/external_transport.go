@@ -22,28 +22,6 @@ type getUsersResponse struct {
 	Users []User `json:"users,omitempty"`
 }
 
-type getUserByIDRequest struct{}
-type getUserByIDResponse struct {
-	User User `json:"user,omitempty"`
-}
-
-type loginRequest struct {
-	Login User `json:"user"`
-}
-type loginResponse struct {
-	Login User `json:"user,omitempty"`
-}
-
-type changeNameRequest struct {
-	User User `json:"user"`
-}
-type changeNameResponse struct{}
-type changePasswordRequest struct {
-	User User `json:"user"`
-}
-type changePasswordResponse struct{}
-
-// Decoders
 func decodeGetUsersRequest(ctx context.Context, r *http.Request) (interface{}, error) {
 	// Limit to just our family.
 	// Get familyID from JWT
@@ -57,56 +35,18 @@ func decodeGetUsersRequest(ctx context.Context, r *http.Request) (interface{}, e
 	request.FamilyID = familyID
 	return request, nil
 }
-
-func decodeChangeNameRequest(ctx context.Context, r *http.Request) (interface{}, error) {
-	var user User
-	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
-		return User{}, err
+func encodeGetUsersResponse(ctx context.Context, w http.ResponseWriter, r interface{}) error {
+	response := r.(getUsersResponse)
+	if len(response.Users) == 0 {
+		w.WriteHeader(http.StatusNoContent)
+		return nil
 	}
-	if !user.ValidateName() {
-		return User{}, gigatarerrors.ErrBadRequest
-	}
-
-	// Get userID from JWT
-	var jwt token.JWTToken
-	userID, err := jwt.GetUser(r.Header.Get("authorization"))
-	if err != nil {
-		return User{}, err
-	}
-
-	id, err := primitive.ObjectIDFromHex(userID)
-	if err != nil {
-		log.Println(err)
-		return User{}, gigatarerrors.ErrBadRequest
-	}
-	user.ID = id
-
-	return user, nil
+	return json.NewEncoder(w).Encode(response)
 }
-func decodeChangePasswordRequest(ctx context.Context, r *http.Request) (interface{}, error) {
-	var user User
-	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
-		return User{}, err
-	}
-	if !user.ValidatePassword() {
-		return User{}, gigatarerrors.ErrBadRequest
-	}
 
-	// Get userID from JWT
-	var jwt token.JWTToken
-	userID, err := jwt.GetUser(r.Header.Get("authorization"))
-	if err != nil {
-		return User{}, err
-	}
-
-	id, err := primitive.ObjectIDFromHex(userID)
-	if err != nil {
-		log.Println(err)
-		return User{}, gigatarerrors.ErrBadRequest
-	}
-	user.ID = id
-
-	return user, nil
+type getUserByIDRequest struct{}
+type getUserByIDResponse struct {
+	User User `json:"user,omitempty"`
 }
 
 func decodeGetUserByIDRequest(ctx context.Context, r *http.Request) (interface{}, error) {
@@ -133,26 +73,6 @@ func decodeGetUserByIDRequest(ctx context.Context, r *http.Request) (interface{}
 
 	return user, nil
 }
-
-func decodeLoginRequest(ctx context.Context, r *http.Request) (interface{}, error) {
-	var user User
-	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
-		return nil, err
-	}
-
-	return user, nil
-}
-
-// Encoders
-func encodeGetUsersResponse(ctx context.Context, w http.ResponseWriter, r interface{}) error {
-	response := r.(getUsersResponse)
-	if len(response.Users) == 0 {
-		w.WriteHeader(http.StatusNoContent)
-		return nil
-	}
-	return json.NewEncoder(w).Encode(response)
-}
-
 func encodeGetUserByIDResponse(ctx context.Context, w http.ResponseWriter, r interface{}) error {
 	response := r.(getUserByIDResponse)
 	if len(response.User.Name) < 1 {
@@ -162,6 +82,21 @@ func encodeGetUserByIDResponse(ctx context.Context, w http.ResponseWriter, r int
 	return json.NewEncoder(w).Encode(response)
 }
 
+type loginRequest struct {
+	Login User `json:"user"`
+}
+type loginResponse struct {
+	Login User `json:"user,omitempty"`
+}
+
+func decodeLoginRequest(ctx context.Context, r *http.Request) (interface{}, error) {
+	var user User
+	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
+		return nil, err
+	}
+
+	return user, nil
+}
 func encodeLoginResponse(ctx context.Context, w http.ResponseWriter, r interface{}) error {
 	response := r.(loginResponse)
 
@@ -178,11 +113,72 @@ func encodeLoginResponse(ctx context.Context, w http.ResponseWriter, r interface
 	return json.NewEncoder(w).Encode(response.Login)
 }
 
+type changeNameRequest struct {
+	User User `json:"user"`
+}
+type changeNameResponse struct{}
+
+func decodeChangeNameRequest(ctx context.Context, r *http.Request) (interface{}, error) {
+	var user User
+	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
+		return User{}, err
+	}
+	if !user.ValidateName() {
+		return User{}, gigatarerrors.ErrBadRequest
+	}
+
+	// Get userID from JWT
+	var jwt token.JWTToken
+	userID, err := jwt.GetUser(r.Header.Get("authorization"))
+	if err != nil {
+		return User{}, err
+	}
+
+	id, err := primitive.ObjectIDFromHex(userID)
+	if err != nil {
+		log.Println(err)
+		return User{}, gigatarerrors.ErrBadRequest
+	}
+	user.ID = id
+
+	return user, nil
+}
+
 func encodeChangeNameResponse(ctx context.Context, w http.ResponseWriter, r interface{}) error {
 	w.WriteHeader(http.StatusNoContent)
 	return nil
 }
 
+type changePasswordRequest struct {
+	User User `json:"user"`
+}
+type changePasswordResponse struct{}
+
+func decodeChangePasswordRequest(ctx context.Context, r *http.Request) (interface{}, error) {
+	var user User
+	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
+		return User{}, err
+	}
+	if !user.ValidatePassword() {
+		return User{}, gigatarerrors.ErrBadRequest
+	}
+
+	// Get userID from JWT
+	var jwt token.JWTToken
+	userID, err := jwt.GetUser(r.Header.Get("authorization"))
+	if err != nil {
+		return User{}, err
+	}
+
+	id, err := primitive.ObjectIDFromHex(userID)
+	if err != nil {
+		log.Println(err)
+		return User{}, gigatarerrors.ErrBadRequest
+	}
+	user.ID = id
+
+	return user, nil
+}
 func encodeChangePasswordResponse(ctx context.Context, w http.ResponseWriter, r interface{}) error {
 	w.WriteHeader(http.StatusNoContent)
 	return nil

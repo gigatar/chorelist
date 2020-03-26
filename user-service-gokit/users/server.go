@@ -20,6 +20,7 @@ func NewHTTPServer(s Service) *http.Server {
 
 	router := mux.NewRouter()
 	users := router.PathPrefix("/rest/v1/users").Subrouter()
+	usersInternal := router.PathPrefix("/internal/v1/users").Subrouter()
 	usersAuth := router.PathPrefix("/rest/v1/users").Subrouter()
 
 	// Add middleware
@@ -58,6 +59,20 @@ func NewHTTPServer(s Service) *http.Server {
 		endpoints.ChangePassword,
 		decodeChangePasswordRequest,
 		encodeChangePasswordResponse,
+		options...,
+	))
+
+	// Internal Endpoints
+	usersInternal.Methods("POST").Path("/create").Handler(httptransport.NewServer(
+		endpoints.CreateUser,
+		decodeCreateUserRequest,
+		encodeCreateUserResponse,
+		options...,
+	))
+	usersInternal.Methods("DELETE").Path("/{id}").Handler(httptransport.NewServer(
+		endpoints.DeleteUser,
+		decodeDeleteUserRequest,
+		encodeDeleteUserResponse,
 		options...,
 	))
 

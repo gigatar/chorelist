@@ -14,9 +14,10 @@ type Service interface {
 	GetFamilyByID(ctx context.Context, inputFamily Family) (Family, error)
 	ChangeName(ctx context.Context, inputFamily Family) error
 	CreateFamily(ctx context.Context, inputFamily Family) (interface{}, error)
+	DeleteFamily(ctx context.Context, inputFamily Family) error
 	// Add Family Member
 	// Remove Family Member
-	// Delete Family
+
 }
 
 // Family data type
@@ -81,5 +82,24 @@ func (Family) ChangeName(ctx context.Context, inputFamily Family) error {
 		return err
 	}
 
+	return nil
+}
+
+// DeleteFamily removes a family from the system.
+func (Family) DeleteFamily(ctx context.Context, inputFamily Family) error {
+	var db Database
+	collection, err := db.GetFamilyCollection(ctx)
+	if err != nil {
+		return err
+	}
+
+	result, err := collection.DeleteOne(ctx, bson.M{"_id": inputFamily.ID})
+	if err != nil {
+		return err
+	}
+
+	if result.DeletedCount == 0 {
+		return gigatarerrors.ErrNotFound
+	}
 	return nil
 }

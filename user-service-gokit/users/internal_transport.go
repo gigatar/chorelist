@@ -1,4 +1,4 @@
-package families
+package users
 
 import (
 	"chorelist/user-service-gokit/gigatarerrors"
@@ -13,29 +13,27 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-type createFamilyRequest struct {
-	Family Family `json:"family"`
+type createUserRequest struct {
+	User User `json:"user"`
 }
-type createFamilyResponse struct {
+type createUserResponse struct {
 	Location primitive.ObjectID `json:"location,omitempty"`
 }
 
-func decodeCreateFamilyRequest(ctx context.Context, r *http.Request) (interface{}, error) {
-	var family Family
-	if err := json.NewDecoder(r.Body).Decode(&family); err != nil {
+func decodeCreateUserRequest(ctx context.Context, r *http.Request) (interface{}, error) {
+	var user User
+	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
 		return nil, err
 	}
 
-	if !family.Validate() {
-		log.Println("Fail name validation")
+	if !user.Validate() {
 		return nil, gigatarerrors.ErrBadRequest
 	}
 
-	return family, nil
+	return user, nil
 }
-
-func encodeCreateFamilyResponse(ctx context.Context, w http.ResponseWriter, r interface{}) error {
-	response := r.(createFamilyResponse)
+func encodeCreateUserResponse(ctx context.Context, w http.ResponseWriter, r interface{}) error {
+	response := r.(createUserResponse)
 	if len(response.Location) != len(primitive.NilObjectID) {
 		return errors.New("Invalid Location")
 	}
@@ -49,17 +47,15 @@ func encodeCreateFamilyResponse(ctx context.Context, w http.ResponseWriter, r in
 	return nil
 }
 
-type deleteFamilyRequest struct {
-	Family Family `json:"family"`
-}
-type deleteFamilyResponse struct{}
+type deleteUserRequest struct{}
+type deleteUserResponse struct{}
 
-func decodeDeleteFamilyRequest(ctx context.Context, r *http.Request) (interface{}, error) {
-	var family Family
+func decodeDeleteUserRequest(ctx context.Context, r *http.Request) (interface{}, error) {
+	var user User
 
 	vars := mux.Vars(r)
 	if _, ok := vars["id"]; !ok {
-		return Family{}, gigatarerrors.ErrBadRequest
+		return User{}, gigatarerrors.ErrBadRequest
 	}
 
 	inputID, err := primitive.ObjectIDFromHex(vars["id"])
@@ -67,12 +63,13 @@ func decodeDeleteFamilyRequest(ctx context.Context, r *http.Request) (interface{
 		return nil, gigatarerrors.ErrBadRequest
 	}
 
-	family.ID = inputID
+	log.Println(inputID)
+	user.ID = inputID
 
-	return family, nil
+	return user, nil
 }
 
-func encodeDeleteFamilyResponse(ctx context.Context, w http.ResponseWriter, r interface{}) error {
+func encodeDeleteUserResponse(ctx context.Context, w http.ResponseWriter, r interface{}) error {
 	w.WriteHeader(http.StatusNoContent)
 	return nil
 }

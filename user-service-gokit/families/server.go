@@ -36,6 +36,12 @@ func NewHTTPServer(s Service) *http.Server {
 		encodeCreateFamilyResponse,
 		options...,
 	))
+	familiesInternal.Methods("DELETE").Path("/{id}").Handler(httptransport.NewServer(
+		endpoints.DeleteFamily,
+		decodeDeleteFamilyRequest,
+		encodeDeleteFamilyResponse,
+		options...,
+	))
 
 	// Authenticated Endpoints
 	familiesAuth.Methods("GET").Path("/{id}").Handler(httptransport.NewServer(

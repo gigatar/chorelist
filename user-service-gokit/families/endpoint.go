@@ -13,6 +13,7 @@ type Endpoints struct {
 	GetFamilyByID endpoint.Endpoint
 	ChangeName    endpoint.Endpoint
 	CreateFamily  endpoint.Endpoint
+	DeleteFamily  endpoint.Endpoint
 }
 
 // MakeServerEndpoints returns the struct with the endpoint mapping.
@@ -21,6 +22,7 @@ func MakeServerEndpoints(srv Service) Endpoints {
 		GetFamilyByID: MakeGetFamilyByIDEndpoint(srv),
 		ChangeName:    MakeChangeNameEndpoint(srv),
 		CreateFamily:  MakeCreateFamilyEndpoint(srv),
+		DeleteFamily:  MakeDeleteFamilyEndpoint(srv),
 	}
 }
 
@@ -58,6 +60,18 @@ func MakeCreateFamilyEndpoint(srv Service) endpoint.Endpoint {
 		}
 		var out createFamilyResponse
 		out.Location = location.(primitive.ObjectID)
-		return out, err
+		return out, nil
+	}
+}
+
+// MakeDeleteFamilyEndpoint returns the response from our service "DeleteFamily".
+func MakeDeleteFamilyEndpoint(srv Service) endpoint.Endpoint {
+	return func(ctx context.Context, inputRequest interface{}) (interface{}, error) {
+		family := inputRequest.(Family)
+		err := srv.DeleteFamily(ctx, family)
+		if err != nil {
+			return nil, err
+		}
+		return nil, nil
 	}
 }

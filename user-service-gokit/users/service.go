@@ -18,6 +18,8 @@ type Service interface {
 	Login(ctx context.Context, inputUser User) (User, error)
 	ChangeName(ctx context.Context, inputUser User) error
 	ChangePassword(ctx context.Context, inputUser User) error
+	CreateUser(ctx context.Context, inputUser User) (interface{}, error)
+	DeleteUser(ctx context.Context, inputUser User) error
 }
 
 const bcryptPasswordCost = 10
@@ -45,8 +47,55 @@ func NewService() Service {
 	return User{}
 }
 
+// DeleteUser removes a user from the system
+func (User) DeleteUser(ctx context.Context, inputUser User) error {
+	var db Database
+	collection, err := db.GetPersonCollection(ctx)
+	if err != nil {
+		return err
+	}
+
+	result, err := collection.DeleteOne(ctx, bson.M{"_id": inputUser.ID})
+	if err != nil {
+		return err
+	}
+
+	if result.DeletedCount == 0 {
+		return gigatarerrors.ErrNotFound
+	}
+
+	return nil
+}
+
+// CreateUser creates a new user and returns the location
+func (User) CreateUser(ctx context.Context, inputUser User) (interface{}, error) {
+
+	// Hash password
+	hash, err := bcrypt.GenerateFromPassword([]byte(inputUser.Password), bcryptPasswordCost)
+	if err != nil {
+		return nil, err
+	}
+	inputUser.Password = string(hash)
+
+	var db Database
+	collection, err := db.GetPersonCollection(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	result, err := collection.InsertOne(ctx, inputUser)
+	if err != nil {
+		if strings.Contains(err.Error(), "duplicate key") {
+			return nil, gigatarerrors.ErrDuplicate
+		}
+		return nil, err
+	}
+
+	return result.InsertedID, nil
+}
+
 // ChangePassword replaces the password of a user.
-func (u User) ChangePassword(ctx context.Context, inputUser User) error {
+func (User) ChangePassword(ctx context.Context, inputUser User) error {
 	var db Database
 	collection, err := db.GetPersonCollection(ctx)
 	if err != nil {
